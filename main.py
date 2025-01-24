@@ -122,3 +122,101 @@ middle_2 = round(middle_2)
 print("rounded results: ", middle_2)
 print("actual labels: ", labels)
 print("accuracy: ", accuracy(labels, middle_2))
+
+def der_binary_cross_entropy(label, output):  # output belongs to range [0, 1]
+    return ((1 - label)/(1 - output)) - (label / output)
+
+def sigmoid_func(x):
+    return 1 / (1 + np.exp(-x))
+
+@np.vectorize
+def der_sigmoid(x):
+    return sigmoid_func(x) * (1 - sigmoid_func(x))
+
+@np.vectorize
+def der_relu(x):
+    return 1 if x > 0 else 0
+
+class Layer:
+
+    def __init__(self, n_neurons, activation, der_activation):
+        self.n_neurons = n_neurons
+        self.activation = activation  # should be np.vectorize'd
+        self.der_activation = der_activation  # also np.vectorize'd
+        self.z_ = None
+        self.del_ = None
+        self.a_ = None
+        self.b_ = np.zeros((n_neurons, 1))
+    
+    def compute_output_error(self, label, der_loss_function):
+        self.del_ = der_loss_function(label, self.a_[0][0]) * self.der_activation(self.z_)
+
+    def compute_error(self, weights, next_layer):  # weights matrix connecting this layer to the next layer
+        self.del_ = np.matmul(np.transpose(weights), next_layer.del_) * self.der_activation(self.z_)
+    
+    def update_biases(self, learning_rate = 0.2):  # larger learning rate to provide the brute force assist in learning
+        self.b_ = self.b_ - (learning_rate * self.del_)
+
+class Weights:
+
+    def __init__(self, layer_1, layer_2, seed = 1000):
+        self.rows = layer_2.n_neurons
+        self.cols = layer_1.n_neurons
+        self.seed = seed
+        self.layer_1 = layer_1
+        self.layer_2 = layer_2
+        self.matrix = init_weights(self.rows, self.cols, self.seed)
+        self.gradients = np.zeros((self.rows, self.cols))
+    
+    def calc_gradient(self):
+        self.gradients = np.matmul(self.layer_2.del_, np.transpose(self.layer_1.a_))
+    
+    def update_weights(self, learning_rate = 0.1):
+        self.weights = self.weights - (learning_rate * self.gradients)
+
+class Model:
+
+    def __init__(self):
+        self.layers = list()
+        self.weights = list()
+    
+    def add_layer(self, layer):
+        self.layers.append(layer)
+    
+    def init_weights(self):
+        for i in range(len(self.layers)-1):
+            weights.append(Weights(self.layers[i], self.layers[i+1], seed = (i*100) + 5))
+
+    def forward_pass(self, input_data):  # for single training instance
+        try:
+            self.layers[0].a_ = input_data
+            for i in range(1, len(self.layers)):
+                self.layers[i].z_ = np.matmul(self.weights[i-1], self.layers[i-1].a_) + self.layers[i].b_
+                self.layers[i].a_ = self.layers[i].activation(self.layers[i].z_)
+        except IndexError:
+            print("invalid index used in forward pass")
+        except:
+            print("numpy error in forward pass")
+    
+    def calc_loss(self, loss_function, label):  # for single instance only
+        try:
+            return loss_function(label, self.layers[-1].a_)
+        except IndexError:
+            print("invalid index in calc_loss")
+        except:
+            print("error calculating loss in calc_loss")
+    
+    def backward_pass(self, label):
+        try:
+            self.layers[-1].compute_output_error(label)
+            for i in range(len(self.layers)-2, -1, -1):
+                self.layers[i].compute_error(self.weights[i], self.layers[i+1])
+                self.layers[i].update_biases()
+            
+            for i in range(len(self.weights)):
+                self.weights[i].calc_gradient()
+                self.weights[i].update_weights()
+        except IndexError:
+            print("invalid index in backward pass")
+        except:
+            print("error in backward pass")
