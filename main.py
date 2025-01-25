@@ -26,15 +26,18 @@ def init_weights(fan_in, prev_neurons, seed):  # fan_in to this layer = fan_out 
     # here we need mu (mean) = 0, but standard deviation as per we calculated using fan_in.
     return weights
 
-def binary_loss(labels, predictions):
+def binary_loss(labels, predictions, epsilon = 1e-20):
     # predictions[i] is in the range [0, 1]
     total = predictions.size
     summation = 0
 
     for label, prediction in np.nditer([labels, predictions]):
-        summation -= label * np.log(prediction) + (1 - label) * np.log(1 - prediction)
+        summation -= label * np.log(prediction + epsilon) + (1 - label) * np.log(1 - prediction + epsilon)
     
     return (1 / total) * summation
+
+def binary_cross_entropy(label, prediction, epsilon = 1e-20):
+    return -(label * np.log(prediction + epsilon) + (1 - label) * np.log(1 - prediction + epsilon))
 
 def accuracy(labels, predictions):
     confusion_matrix = {'tp': 0, 'tn': 0, 'fp': 0, 'fn': 0}
@@ -101,9 +104,7 @@ dataset = np.hstack((features, labels))
 
 # matrix multiplication: new_result = weight_matrix * previous_result
 
-features = features.reshape((2, features.shape[0]))  # now can use entire dataset in one go
-labels = labels.reshape((1, labels.shape[0]))
-
+'''
 print("forward pass")
 middle_1 = np.matmul(weights, features) + bias_weights  # this is called 'broadcasting' => bias_weights will stretch across multiple columns
 print("before relu: ", middle_1)
@@ -122,9 +123,10 @@ middle_2 = round(middle_2)
 print("rounded results: ", middle_2)
 print("actual labels: ", labels)
 print("accuracy: ", accuracy(labels, middle_2))
+'''
 
-def der_binary_cross_entropy(label, output):  # output belongs to range [0, 1]
-    return ((1 - label)/(1 - output)) - (label / output)
+def der_binary_cross_entropy(label, output, epsilon = 1e-20):  # output belongs to range [0, 1]
+    return ((1 - label)/((1 - output) + epsilon)) - (label / (output + epsilon))
 
 def sigmoid_func(x):
     return 1 / (1 + np.exp(-x))
@@ -139,10 +141,12 @@ def der_relu(x):
 
 class Layer:
 
-    def __init__(self, n_neurons, activation, der_activation):
+    def __init__(self, n_neurons, activation = None, der_activation = None, is_output = False):
         self.n_neurons = n_neurons
         self.activation = activation  # should be np.vectorize'd
         self.der_activation = der_activation  # also np.vectorize'd
+        self.is_output = is_output
+        self.all_outputs = list()
         self.z_ = None
         self.del_ = None
         self.a_ = None
@@ -154,8 +158,12 @@ class Layer:
     def compute_error(self, weights, next_layer):  # weights matrix connecting this layer to the next layer
         self.del_ = np.matmul(np.transpose(weights), next_layer.del_) * self.der_activation(self.z_)
     
-    def update_biases(self, learning_rate = 0.2):  # larger learning rate to provide the brute force assist in learning
-        self.b_ = self.b_ - (learning_rate * self.del_)
+    def update_biases(self, batch_size, learning_rate = 0.8):  # larger learning rate to provide the brute force assist in learning
+        self.b_ = self.b_ - ((learning_rate/batch_size) * self.del_)
+    
+    def collect_outputs(self):
+        if(self.is_output):
+            self.all_outputs.append(float(self.a_[0][0]))
 
 class Weights:
 
@@ -169,54 +177,79 @@ class Weights:
         self.gradients = np.zeros((self.rows, self.cols))
     
     def calc_gradient(self):
-        self.gradients = np.matmul(self.layer_2.del_, np.transpose(self.layer_1.a_))
+        self.gradients += np.matmul(self.layer_2.del_, np.transpose(self.layer_1.a_))
     
-    def update_weights(self, learning_rate = 0.1):
-        self.weights = self.weights - (learning_rate * self.gradients)
+    def update_weights(self, batch_size, learning_rate = 0.4):
+        self.matrix = self.matrix - ((learning_rate/batch_size) * self.gradients)
 
 class Model:
 
-    def __init__(self):
+    def __init__(self, loss_function, der_loss_function):
         self.layers = list()
         self.weights = list()
+        self.loss_function = loss_function  # for single instance => args = (label, output)
+        self.der_loss_function = der_loss_function
     
     def add_layer(self, layer):
         self.layers.append(layer)
     
     def init_weights(self):
         for i in range(len(self.layers)-1):
-            weights.append(Weights(self.layers[i], self.layers[i+1], seed = (i*100) + 5))
+            self.weights.append(Weights(self.layers[i], self.layers[i+1], seed = (i*100) + 5))
 
     def forward_pass(self, input_data):  # for single training instance
-        try:
-            self.layers[0].a_ = input_data
-            for i in range(1, len(self.layers)):
-                self.layers[i].z_ = np.matmul(self.weights[i-1], self.layers[i-1].a_) + self.layers[i].b_
-                self.layers[i].a_ = self.layers[i].activation(self.layers[i].z_)
-        except IndexError:
-            print("invalid index used in forward pass")
-        except:
-            print("numpy error in forward pass")
-    
-    def calc_loss(self, loss_function, label):  # for single instance only
-        try:
-            return loss_function(label, self.layers[-1].a_)
-        except IndexError:
-            print("invalid index in calc_loss")
-        except:
-            print("error calculating loss in calc_loss")
+        # input_data shape = (1, n_cols) where n_cols = no.of features
+        self.layers[0].a_ = input_data.reshape((input_data.shape[-1], 1))
+        for i in range(1, len(self.layers)):
+            self.layers[i].z_ = np.matmul(self.weights[i-1].matrix, self.layers[i-1].a_) + self.layers[i].b_
+            self.layers[i].a_ = self.layers[i].activation(self.layers[i].z_)
+        
+        self.layers[-1].collect_outputs()
+        
     
     def backward_pass(self, label):
-        try:
-            self.layers[-1].compute_output_error(label)
-            for i in range(len(self.layers)-2, -1, -1):
-                self.layers[i].compute_error(self.weights[i], self.layers[i+1])
-                self.layers[i].update_biases()
-            
+        self.layers[-1].compute_output_error(label, self.der_loss_function)
+        for i in range(len(self.layers)-2, 0, -1):  # except the input layer
+            self.layers[i].compute_error(self.weights[i].matrix, self.layers[i+1])
+        
+        for i in range(len(self.weights)):
+            self.weights[i].calc_gradient()
+        
+    
+    def show_weights(self):
+        for i in range(len(self.weights)):
+            print(i, self.weights[i].matrix)
+    
+    def show_biases(self):
+        for i in range(1, len(self.layers)):
+            print(i, self.layers[i].b_)
+
+    def train(self, features, targets, epochs = 1):
+        self.init_weights()
+        print("weights:")
+        self.show_weights()
+        for epoch in range(epochs):
+            print("------epoch-", epoch, "------", sep="")
+            for i in range(features.shape[0]):
+                self.forward_pass(features[i])
+                self.backward_pass(targets[i][0])
+
+            for i in range(1, len(self.layers)):
+                self.layers[i].update_biases(features.shape[0])
+
             for i in range(len(self.weights)):
-                self.weights[i].calc_gradient()
-                self.weights[i].update_weights()
-        except IndexError:
-            print("invalid index in backward pass")
-        except:
-            print("error in backward pass")
+                self.weights[i].update_weights(features.shape[0])
+            # print("target: ", targets, " output: ", self.layers[-1].a_)
+            # print("just before loss, shapes: ", targets[0])
+            predictions = np.array(self.layers[-1].all_outputs)
+            loss = self.loss_function(targets, predictions)
+            print("loss:", loss)
+            accuracy_score = accuracy(targets, round(predictions))
+            print("accuracy:", accuracy_score)
+
+model = Model(binary_loss, der_binary_cross_entropy)  # for batch
+model.add_layer(Layer(2))  # input layer
+model.add_layer(Layer(2, relu, der_relu))
+model.add_layer(Layer(1, sigmoid, der_sigmoid, is_output = True))
+
+model.train(features, labels, 10000)
