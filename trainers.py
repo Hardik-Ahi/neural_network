@@ -11,11 +11,11 @@ class InstanceTrainer():
         self.optimizer = optimizer
         self.optimizer.set_model(self.model)
     
-    def update_biases(self, layer, learning_rate = l_rate):
-        layer.b_ += ((learning_rate) * layer.b_gradients)
+    def update_biases(self, layer_index, learning_rate = l_rate):
+        self.model.layers[layer_index].b_ += ((learning_rate) * self.optimizer.current_gradient_biases(layer_index))
     
-    def update_weights(self, weights, learning_rate = l_rate):
-        weights.matrix += ((learning_rate) * weights.gradients)
+    def update_weights(self, weight_index, learning_rate = l_rate):
+        self.model.weights[weight_index].matrix += ((learning_rate) * self.optimizer.current_gradient_weights(weight_index))
     
     def forward_pass(self, input_data):
         # input_data shape = (1, n_cols)
@@ -46,9 +46,9 @@ class InstanceTrainer():
                 self.backward_pass(targets[i])
 
                 for j in range(1, len(self.model.layers)):
-                    self.update_biases(self.model.layers[j])
+                    self.update_biases(j)
                 for j in range(len(self.model.weights)):
-                    self.update_weights(self.model.weights[j])
+                    self.update_weights(j)
 
                 self.optimizer.on_pass()
 
@@ -93,7 +93,7 @@ class InstanceTrainer():
         print("Loss:", loss)
         score = self.accuracy(targets, round(predictions))
         print("Accuracy:", score)
-        print("Confusion matrix:", self.confusion_matrix(targets, round(predictions)))
+        print("Confusion matrix:", self.confusion_matrix(targets, round(predictions)))  # why suddenly getting 85% accuracy?
 
 
 class BatchTrainer(InstanceTrainer):
@@ -128,9 +128,9 @@ class BatchTrainer(InstanceTrainer):
                 self.backward_pass(targets[i])
 
             for j in range(1, len(self.model.layers)):
-                self.update_biases(self.model.layers[j])
+                self.update_biases(j)
             for j in range(len(self.model.weights)):
-                self.update_weights(self.model.weights[j])
+                self.update_weights(j)
             
             self.predict(features, targets)
             self.optimizer.on_pass()
@@ -160,9 +160,10 @@ class MiniBatchTrainer(BatchTrainer):
                     self.backward_pass(real_targets[i])
 
                 for j in range(1, len(self.model.layers)):
-                    self.update_biases(self.model.layers[j])
+                    self.update_biases(j)
+                print("minibatch, len(self.model.weights):", len(self.model.weights))
                 for j in range(len(self.model.weights)):
-                    self.update_weights(self.model.weights[j])
+                    self.update_weights(j)
                 
                 self.optimizer.on_pass()
                 start_index += self.batch_size
