@@ -4,7 +4,7 @@ from model_functions import round
 
 l_rate = 0.01
 
-class SGDTrainer():
+class InstanceTrainer():
 
     def __init__(self, model, optimizer):
         self.model = model
@@ -12,7 +12,7 @@ class SGDTrainer():
         self.optimizer.set_model(self.model)
     
     def update_biases(self, layer, learning_rate = l_rate):
-        layer.b_ += ((learning_rate) * layer.del_)
+        layer.b_ += ((learning_rate) * layer.b_gradients)
     
     def update_weights(self, weights, learning_rate = l_rate):
         weights.matrix += ((learning_rate) * weights.gradients)
@@ -25,12 +25,12 @@ class SGDTrainer():
             self.model.layers[i].a_ = self.model.layers[i].activation(self.model.layers[i].z_)
     
     def backward_pass(self, label):
-        self.optimizer.error_output_layer(self.model.layers[-1], label, True)
+        self.optimizer.error_output_layer(-1, label, True)
         for i in range(len(self.model.layers)-2, 0, -1):  # except the input layer
-            self.optimizer.error_layer(self.model.layers[i], self.model.weights[i].matrix, self.model.layers[i+1], True)
+            self.optimizer.error_layer(i, i, True)
         
         for i in range(len(self.model.weights)):
-            self.optimizer.gradients(self.model.weights[i], True)
+            self.optimizer.gradients(i, True)
     
     def show_epoch(self, epoch):
         print(f"epoch-{epoch}:")
@@ -96,28 +96,25 @@ class SGDTrainer():
         print("Confusion matrix:", self.confusion_matrix(targets, round(predictions)))
 
 
-class BatchTrainer(SGDTrainer):
+class BatchTrainer(InstanceTrainer):
 
-    def error_output_layer(self, layer, label):
-        value = self.optimizer.error_output_layer(layer, label)
-        layer.b_gradients += value / self.batch_size
-        layer.del_ = value
+    def error_output_layer(self, layer_index, label):
+        value = self.optimizer.error_output_layer(layer_index, label)
+        self.model.layers[layer_index].b_gradients += value / self.batch_size
+        self.model.layers[layer_index].del_ = value
 
-    def error_layer(self, this_layer, weights, next_layer):
-        value = self.optimizer.error_layer(this_layer, weights, next_layer)
-        this_layer.b_gradients += value / self.batch_size
-        this_layer.del_ = value
-    
-    def update_biases(self, layer, learning_rate = l_rate):
-        layer.b_ += ((learning_rate) * layer.b_gradients)
+    def error_layer(self, this_index, weight_index):
+        value = self.optimizer.error_layer(this_index, weight_index)
+        self.model.layers[this_index].b_gradients += value / self.batch_size
+        self.model.layers[this_index].del_ = value
 
     def backward_pass(self, label):  # single instance
-        self.error_output_layer(self.model.layers[-1], label)
+        self.error_output_layer(-1, label)
         for i in range(len(self.model.layers)-2, 0, -1):  # except the input layer
-            self.error_layer(self.model.layers[i], self.model.weights[i].matrix, self.model.layers[i+1])
+            self.error_layer(i, i)
         
         for i in range(len(self.model.weights)):
-            self.gradients(self.model.weights[i])
+            self.gradients(i)
 
     def train(self, features, targets, epochs = 1):
         targets.reshape((targets.size,))
@@ -138,11 +135,8 @@ class BatchTrainer(SGDTrainer):
             self.predict(features, targets)
             self.optimizer.on_pass()
     
-    def gradients(self, weights):
-        weights.gradients += self.optimizer.gradients(weights) / self.batch_size
-    
-    def update_weights(self, weights, learning_rate = l_rate):
-        weights.matrix += ((learning_rate) * weights.gradients)
+    def gradients(self, weight_index):
+        self.model.weights[weight_index].gradients += self.optimizer.gradients(weight_index) / self.batch_size
 
 class MiniBatchTrainer(BatchTrainer):
 

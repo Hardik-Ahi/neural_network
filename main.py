@@ -4,7 +4,7 @@ from model_classes import Layer, Model
 from dataset_utils import and_gate_dataset, standardize_data
 from model_functions import der_relu, der_sigmoid, relu, sigmoid, der_binary_cross_entropy, binary_loss
 from optimizers import SGD
-from trainers import BatchTrainer, MiniBatchTrainer, SGDTrainer
+from trainers import BatchTrainer, MiniBatchTrainer
 
 
 model = Model(binary_loss, der_binary_cross_entropy, 100)  # for batch
