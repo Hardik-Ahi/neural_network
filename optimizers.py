@@ -23,4 +23,5 @@ class SGD():
         # reset errors
         for layer in self.model.layers:
             layer.del_ = np.zeros((layer.n_neurons, 1))
+            layer.b_gradients = np.zeros((layer.n_neurons, 1))
     

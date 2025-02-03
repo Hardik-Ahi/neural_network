@@ -1,8 +1,9 @@
 import numpy as np
-
 from dataset_utils import get_minibatch
 from model_classes import accuracy
 from model_functions import binary_loss
+
+l_rate = 0.01
 
 class SGDTrainer():
 
@@ -11,10 +12,10 @@ class SGDTrainer():
         self.optimizer = optimizer
         self.optimizer.set_model(self.model)
     
-    def update_biases(self, layer, learning_rate = 0.01):
+    def update_biases(self, layer, learning_rate = l_rate):
         layer.b_ += ((learning_rate) * layer.del_)
     
-    def update_weights(self, weights, learning_rate = 0.01):
+    def update_weights(self, weights, learning_rate = l_rate):
         weights.matrix += ((learning_rate) * weights.gradients)
     
     def forward_pass(self, input_data):  # for single training instance
@@ -33,12 +34,13 @@ class SGDTrainer():
             self.model.weights[i].gradients = self.optimizer.gradients(self.model.weights[i])
     
     def train(self, features, targets, epochs = 1):
+        targets.reshape((targets.size,))
         self.model.init_weights()
 
         for epoch in range(epochs):
             for i in range(features.shape[0]):
                 self.forward_pass(features[i])
-                self.backward_pass(targets[i][0])
+                self.backward_pass(targets[i])
 
                 for j in range(1, len(self.model.layers)):
                     self.update_biases(self.model.layers[j])
@@ -57,42 +59,52 @@ class SGDTrainer():
 class BatchTrainer(SGDTrainer):
 
     # extending of parent's __init__
-    def __init__(self, model, batch_size):
-        super().__init__(model)  # super() just returns a reference to the parent class
-        self.batch_size = batch_size
+    def __init__(self, model, optimizer):
+        super().__init__(model, optimizer)  # super() just returns a reference to the parent class
 
     def error_output_layer(self, layer, label):
-        layer.del_ += self.model.der_loss_function(label, layer.a_[0][0]) * layer.der_activation(layer.z_) / self.batch_size
+        value = self.optimizer.error_output_layer(layer, label)
+        layer.b_gradients += value / self.batch_size  # everywhere, update biases using b_gradients
+        layer.del_ = value
 
     def error_layer(self, this_layer, weights, next_layer):
-        this_layer.del_ += np.matmul(np.transpose(weights), next_layer.del_) * this_layer.der_activation(this_layer.z_) / self.batch_size
+        value = self.optimizer.error_layer(this_layer, weights, next_layer)
+        this_layer.b_gradients += value / self.batch_size
+        this_layer.del_ = value
     
-    def update_biases(self, layer, learning_rate = 0.1):
-        layer.b_ -= ((learning_rate) * layer.del_)
+    def update_biases(self, layer, learning_rate = l_rate):  # to whom should learning_rate belong? trainer / optimizer?
+        layer.b_ += ((learning_rate) * layer.b_gradients)
 
-    def backward_pass(self, labels):
-        # write this func
-        pass
+    def backward_pass(self, label):  # single instance
+        self.error_output_layer(self.model.layers[-1], label)
+        for i in range(len(self.model.layers)-2, 0, -1):  # except the input layer
+            self.error_layer(self.model.layers[i], self.model.weights[i].matrix, self.model.layers[i+1])
+        
+        for i in range(len(self.model.weights)):
+            self.gradients(self.model.weights[i])
 
     def train(self, features, targets, epochs = 1):
-        self.init_weights()
+        targets.reshape((targets.size,))
+        self.model.init_weights()
+        self.batch_size = features.shape[0]
         # write this func
-    
-    # profound refactoring needed here
-    def calc_gradient_batch(self, batch_size = 1):
-        if self.gradients.size == 0:
-            self.gradients = np.matmul(self.layer_2.del_, np.transpose(self.layer_1.a_)) / batch_size
-        else:
-            self.gradients += np.matmul(self.layer_2.del_, np.transpose(self.layer_1.a_)) / batch_size
-    
-    def update_weights_batch(self, learning_rate = 0.1):
-        self.matrix -= ((learning_rate) * self.gradients)
+        for epoch in range(epochs):
+            for i in range(features.shape[0]):
+                self.forward_pass(features[i])
+                self.backward_pass(targets[i])
 
-    def forward_pass_batch(self, input_data):
-        self.layers[0].a_ = input_data.reshape((input_data.shape[1], input_data.shape[0]))
-        for i in range(1, len(self.layers)):
-            self.layers[i].z_ = np.matmul(self.weights[i-1].matrix, self.layers[i-1].a_) + self.layers[i].b_
-            self.layers[i].a_ = self.layers[i].activation(self.layers[i].z_)
+            for j in range(1, len(self.model.layers)):
+                self.update_biases(self.model.layers[j])
+            for j in range(len(self.model.weights)):
+                self.update_weights(self.model.weights[j])
+            
+            self.optimizer.on_pass()
+    
+    def gradients(self, weights):
+        weights.gradients += self.optimizer.gradients(weights) / self.batch_size
+    
+    def update_weights(self, weights, learning_rate = l_rate):
+        weights.matrix += ((learning_rate) * weights.gradients)
 
 class MiniBatchTrainer(SGDTrainer):
 

@@ -41,6 +41,7 @@ class Layer:
         self.der_activation = der_activation
         self.z_ = np.zeros((n_neurons, 1))
         self.del_ = np.zeros((n_neurons, 1))
+        self.b_gradients = np.zeros((n_neurons, 1))
         self.a_ = np.zeros((n_neurons, 1))
         self.b_ = np.zeros((n_neurons, 1))
 
