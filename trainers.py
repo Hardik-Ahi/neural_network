@@ -1,5 +1,6 @@
 import numpy as np
 from dataset_utils import get_minibatch
+from model_functions import round
 
 l_rate = 0.01
 
@@ -31,11 +32,15 @@ class SGDTrainer():
         for i in range(len(self.model.weights)):
             self.optimizer.gradients(self.model.weights[i], True)
     
+    def show_epoch(self, epoch):
+        print(f"epoch-{epoch}:")
+
     def train(self, features, targets, epochs = 1):
         targets.reshape((targets.size,))
         self.model.init_weights()
 
         for epoch in range(epochs):
+            self.show_epoch(epoch)
             for i in range(features.shape[0]):
                 self.forward_pass(features[i])
                 self.backward_pass(targets[i])
@@ -45,19 +50,48 @@ class SGDTrainer():
                 for j in range(len(self.model.weights)):
                     self.update_weights(self.model.weights[j])
 
-                prediction = self.model.layers[-1].a_[0]
-                loss = self.model.loss_function(targets[i], prediction)
-                print("loss:", loss)
                 self.optimizer.on_pass()
+
+            self.predict(features, targets)
     
-    # another method: predict() (accuracy & loss) for a batch of features.
-    # but this is independent from the Trainer used. so where should we place it? => here itself; other trainers can get it thru inheritance.
+    def accuracy(self, labels, predictions):
+        confusion_matrix = {'tp': 0, 'tn': 0, 'fp': 0, 'fn': 0}
+        for label, prediction in np.nditer([labels, predictions]):
+            if label == 1:
+                if prediction == 1:
+                    confusion_matrix['tp'] += 1
+                else:
+                    confusion_matrix['fn'] += 1
+            else:
+                if prediction == 1:
+                    confusion_matrix['fp'] += 1
+                else:
+                    confusion_matrix['tn'] += 1
+        total = 0
+        for i in confusion_matrix.values():
+            total += i
+        return (confusion_matrix['tp'] + confusion_matrix['tn']) / total
+    
+    def predict(self, features, targets):
+        targets.reshape((targets.size,))
+        predictions = list()
+
+        for i in range(features.shape[0]):
+            self.forward_pass(features[i])
+            predictions.append(self.model.layers[-1].a_[0][0])
+        
+        predictions = np.array(predictions)
+        loss = self.model.loss_function(targets, predictions.reshape((predictions.size,)))
+        print("Loss:", loss)
+        score = self.accuracy(targets, round(predictions))
+        print("Accuracy:", score)
+
 
 class BatchTrainer(SGDTrainer):
 
     def error_output_layer(self, layer, label):
         value = self.optimizer.error_output_layer(layer, label)
-        layer.b_gradients += value / self.batch_size  # everywhere, update biases using b_gradients
+        layer.b_gradients += value / self.batch_size
         layer.del_ = value
 
     def error_layer(self, this_layer, weights, next_layer):
@@ -65,7 +99,7 @@ class BatchTrainer(SGDTrainer):
         this_layer.b_gradients += value / self.batch_size
         this_layer.del_ = value
     
-    def update_biases(self, layer, learning_rate = l_rate):  # to whom should learning_rate belong? trainer / optimizer?
+    def update_biases(self, layer, learning_rate = l_rate):
         layer.b_ += ((learning_rate) * layer.b_gradients)
 
     def backward_pass(self, label):  # single instance
@@ -80,8 +114,9 @@ class BatchTrainer(SGDTrainer):
         targets.reshape((targets.size,))
         self.model.init_weights()
         self.batch_size = features.shape[0]
-        # write this func
+        
         for epoch in range(epochs):
+            self.show_epoch(epoch)
             for i in range(features.shape[0]):
                 self.forward_pass(features[i])
                 self.backward_pass(targets[i])
@@ -91,7 +126,7 @@ class BatchTrainer(SGDTrainer):
             for j in range(len(self.model.weights)):
                 self.update_weights(self.model.weights[j])
             
-            # how to calculate loss here? for a full batch of samples => average loss?
+            self.predict(features, targets)
             self.optimizer.on_pass()
     
     def gradients(self, weights):
@@ -111,9 +146,11 @@ class MiniBatchTrainer(BatchTrainer):
         targets.reshape((targets.size,))
 
         for epoch in range(epochs):
+            self.show_epoch(epoch)
             start_index = 0
             while start_index < features.shape[0]:
                 real_features, real_targets = get_minibatch(features, targets, self.minibatch_size, start_index)
+                real_targets = real_targets.reshape((real_targets.size,))
                 self.batch_size = real_features.shape[0]  # giving this minibatch_size to BatchTrainer's error_computing functions
                 for i in range(real_features.shape[0]):
                     self.forward_pass(real_features[i])
@@ -126,3 +163,4 @@ class MiniBatchTrainer(BatchTrainer):
                 
                 self.optimizer.on_pass()
                 start_index += self.batch_size
+            self.predict(features, targets)

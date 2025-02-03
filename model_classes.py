@@ -1,37 +1,8 @@
 import numpy as np
 from numpy.random import default_rng
 from math import sqrt
-
 from dataset_utils import get_minibatch
 from model_functions import binary_loss
-
-# internal dependencies (functions used within the classes only)
-def init_weights(destination_neurons, source_neurons, seed):  # destination_neurons = fan_in to this layer = fan_out of previous layer
-    std = sqrt(2 / source_neurons)  # standard deviation for 'He' initialization (use it if you use ReLU functions)
-    generator = default_rng(seed)
-
-    weights = generator.standard_normal((destination_neurons, source_neurons)) * std  # z = x-mu / sigma, therefore x = z . sigma + mu; z = standard normal
-    # here we need mu (mean) = 0, but standard deviation as per we calculated using fan_in.
-    return weights
-
-# is this external or internal dependency?
-def accuracy(labels, predictions):  # both must be of same shape
-    confusion_matrix = {'tp': 0, 'tn': 0, 'fp': 0, 'fn': 0}
-    for label, prediction in np.nditer([labels, predictions]):
-        if label == 1:
-            if prediction == 1:
-                confusion_matrix['tp'] += 1
-            else:
-                confusion_matrix['fn'] += 1
-        else:
-            if prediction == 1:
-                confusion_matrix['fp'] += 1
-            else:
-                confusion_matrix['tn'] += 1
-    total = 0
-    for i in confusion_matrix.values():
-        total += i
-    return (confusion_matrix['tp'] + confusion_matrix['tn']) / total
 
 class Layer:
 
@@ -53,23 +24,32 @@ class Weights:
         self.seed = seed
         self.layer_1 = layer_1
         self.layer_2 = layer_2
-        self.matrix = init_weights(self.rows, self.cols, self.seed)
+        self.matrix = self.init_weights(self.rows, self.cols, self.seed)
         self.gradients = np.zeros((self.rows, self.cols))
+    
+    def init_weights(self, destination_neurons, source_neurons, seed):  # destination_neurons = fan_in to this layer = fan_out of previous layer
+        std = sqrt(2 / source_neurons)  # standard deviation for 'He' initialization (use it if you use ReLU functions)
+        generator = default_rng(seed)
+
+        weights = generator.standard_normal((destination_neurons, source_neurons)) * std  # z = x-mu / sigma, therefore x = z . sigma + mu; z = standard normal
+        # here we need mu (mean) = 0, but standard deviation as per we calculated using fan_in.
+        return weights
 
 class Model:
 
-    def __init__(self, loss_function, der_loss_function):
+    def __init__(self, loss_function, der_loss_function, seed):
         self.layers = list()
         self.weights = list()
         self.loss_function = loss_function  # should be applicable to single instances and batches
         self.der_loss_function = der_loss_function
+        self.seed = seed
     
     def add_layer(self, layer):
         self.layers.append(layer)
     
     # part of model compiler
     def init_weights(self):
-        generator = default_rng(seed = 100)
+        generator = default_rng(seed = self.seed)
         seeds = generator.integers(0, len(self.layers)*100, (len(self.layers)-1,))
 
         for i in range(len(self.layers)-1):
