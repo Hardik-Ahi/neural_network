@@ -1,7 +1,5 @@
 import numpy as np
 from dataset_utils import get_minibatch
-from model_classes import accuracy
-from model_functions import binary_loss
 
 l_rate = 0.01
 
@@ -18,20 +16,20 @@ class SGDTrainer():
     def update_weights(self, weights, learning_rate = l_rate):
         weights.matrix += ((learning_rate) * weights.gradients)
     
-    def forward_pass(self, input_data):  # for single training instance
+    def forward_pass(self, input_data):
         # input_data shape = (1, n_cols)
         self.model.layers[0].a_ = input_data.reshape((input_data.shape[-1], 1))
         for i in range(1, len(self.model.layers)):
             self.model.layers[i].z_ = np.matmul(self.model.weights[i-1].matrix, self.model.layers[i-1].a_) + self.model.layers[i].b_
             self.model.layers[i].a_ = self.model.layers[i].activation(self.model.layers[i].z_)
     
-    def backward_pass(self, label):  # single instance
-        self.model.layers[-1].del_ = self.optimizer.error_output_layer(self.model.layers[-1], label)
+    def backward_pass(self, label):
+        self.optimizer.error_output_layer(self.model.layers[-1], label, True)
         for i in range(len(self.model.layers)-2, 0, -1):  # except the input layer
-            self.model.layers[i].del_ = self.optimizer.error_layer(self.model.layers[i], self.model.weights[i].matrix, self.model.layers[i+1])
+            self.optimizer.error_layer(self.model.layers[i], self.model.weights[i].matrix, self.model.layers[i+1], True)
         
         for i in range(len(self.model.weights)):
-            self.model.weights[i].gradients = self.optimizer.gradients(self.model.weights[i])
+            self.optimizer.gradients(self.model.weights[i], True)
     
     def train(self, features, targets, epochs = 1):
         targets.reshape((targets.size,))
@@ -52,15 +50,10 @@ class SGDTrainer():
                 print("loss:", loss)
                 self.optimizer.on_pass()
     
-    # another method: predict() for a batch of features / single instance.
-    # but this is independent from the Trainer used. so where should we place it?
+    # another method: predict() (accuracy & loss) for a batch of features.
+    # but this is independent from the Trainer used. so where should we place it? => here itself; other trainers can get it thru inheritance.
 
-# very ambiguous, uncertain method definitions
 class BatchTrainer(SGDTrainer):
-
-    # extending of parent's __init__
-    def __init__(self, model, optimizer):
-        super().__init__(model, optimizer)  # super() just returns a reference to the parent class
 
     def error_output_layer(self, layer, label):
         value = self.optimizer.error_output_layer(layer, label)
@@ -98,6 +91,7 @@ class BatchTrainer(SGDTrainer):
             for j in range(len(self.model.weights)):
                 self.update_weights(self.model.weights[j])
             
+            # how to calculate loss here? for a full batch of samples => average loss?
             self.optimizer.on_pass()
     
     def gradients(self, weights):
@@ -106,38 +100,29 @@ class BatchTrainer(SGDTrainer):
     def update_weights(self, weights, learning_rate = l_rate):
         weights.matrix += ((learning_rate) * weights.gradients)
 
-class MiniBatchTrainer(SGDTrainer):
+class MiniBatchTrainer(BatchTrainer):
 
-    def __init__(self, model, minibatch_size):
-        super().__init__(model)
+    def __init__(self, model, optimizer, minibatch_size):
+        super().__init__(model, optimizer)
         self.minibatch_size = minibatch_size
     
-    def train_minibatch(self, features, targets, batch_size = 1, epochs = 1):
+    def train(self, features, targets, epochs = 1):
         self.init_weights()
-        print("weights:")
-        self.show_weights()
-        learning_rate = 1
+        targets.reshape((targets.size,))
+
         for epoch in range(epochs):
-            print("------epoch-", epoch, "------", sep="")
-            if epoch > 500:
-                learning_rate = 0.5
             start_index = 0
             while start_index < features.shape[0]:
-                real_features, real_targets = get_minibatch(features, targets, batch_size, start_index)
+                real_features, real_targets = get_minibatch(features, targets, self.minibatch_size, start_index)
+                self.batch_size = real_features.shape[0]  # giving this minibatch_size to BatchTrainer's error_computing functions
                 for i in range(real_features.shape[0]):
                     self.forward_pass(real_features[i])
-                    self.backward_pass_batch(real_targets[i][0], batch_size = batch_size)
+                    self.backward_pass(real_targets[i])
 
-                for j in range(1, len(self.layers)):
-                    self.layers[j].update_biases_batch(learning_rate = learning_rate)
-                for j in range(len(self.weights)):
-                    self.weights[j].update_weights_batch(learning_rate = learning_rate)
+                for j in range(1, len(self.model.layers)):
+                    self.update_biases(self.model.layers[j])
+                for j in range(len(self.model.weights)):
+                    self.update_weights(self.model.weights[j])
                 
-                self.clean_up_pass()
-                start_index += batch_size
-            
-            self.forward_pass_batch(features)
-            predictions = self.layers[-1].a_  # shape = (1, m)
-            temp_targets = targets.reshape((1, targets.shape[0])).astype(int)
-            print("\naccuracy: ", accuracy(temp_targets, round(predictions)))
-            print("loss: ", binary_loss(targets, predictions.reshape((predictions.shape[-1], 1))))
+                self.optimizer.on_pass()
+                start_index += self.batch_size
