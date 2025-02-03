@@ -54,26 +54,34 @@ class SGDTrainer():
 
             self.predict(features, targets)
     
-    def accuracy(self, labels, predictions):
-        confusion_matrix = {'tp': 0, 'tn': 0, 'fp': 0, 'fn': 0}
-        for label, prediction in np.nditer([labels, predictions]):
-            if label == 1:
-                if prediction == 1:
-                    confusion_matrix['tp'] += 1
+    def confusion_matrix(self, labels, predictions):
+        predictions = predictions.reshape((predictions.size, 1))
+        labels = labels.reshape((labels.size, 1))
+        stack = np.hstack((labels, predictions))
+        matrix = {'tp': 0, 'tn': 0, 'fp': 0, 'fn': 0}
+
+        for i in range(stack.shape[0]):
+            if stack[i][0] == 1:
+                if stack[i][1] == 1:
+                    matrix['tp'] += 1
                 else:
-                    confusion_matrix['fn'] += 1
+                    matrix['fn'] += 1
             else:
-                if prediction == 1:
-                    confusion_matrix['fp'] += 1
+                if stack[i][1] == 1:
+                    matrix['fp'] += 1
                 else:
-                    confusion_matrix['tn'] += 1
+                    matrix['tn'] += 1
+        return matrix
+    
+    def accuracy(self, labels, predictions):
+        confusion_matrix = self.confusion_matrix(labels, predictions)
         total = 0
         for i in confusion_matrix.values():
             total += i
         return (confusion_matrix['tp'] + confusion_matrix['tn']) / total
     
     def predict(self, features, targets):
-        targets.reshape((targets.size,))
+        targets = targets.reshape((targets.size,))
         predictions = list()
 
         for i in range(features.shape[0]):
@@ -85,6 +93,7 @@ class SGDTrainer():
         print("Loss:", loss)
         score = self.accuracy(targets, round(predictions))
         print("Accuracy:", score)
+        print("Confusion matrix:", self.confusion_matrix(targets, round(predictions)))
 
 
 class BatchTrainer(SGDTrainer):
@@ -142,7 +151,7 @@ class MiniBatchTrainer(BatchTrainer):
         self.minibatch_size = minibatch_size
     
     def train(self, features, targets, epochs = 1):
-        self.init_weights()
+        self.model.init_weights()
         targets.reshape((targets.size,))
 
         for epoch in range(epochs):

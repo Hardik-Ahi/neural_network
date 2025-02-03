@@ -14,7 +14,10 @@ class Layer:
         self.del_ = np.zeros((n_neurons, 1))
         self.b_gradients = np.zeros((n_neurons, 1))
         self.a_ = np.zeros((n_neurons, 1))
-        self.b_ = np.zeros((n_neurons, 1))
+        self.b_ = self.init_biases()
+    
+    def init_biases(self):
+        return np.ones((self.n_neurons, 1)) * 2
 
 class Weights:
 

@@ -4,7 +4,7 @@ from model_classes import Layer, Model
 from dataset_utils import and_gate_dataset, standardize_data
 from model_functions import der_relu, der_sigmoid, relu, sigmoid, der_binary_cross_entropy, binary_loss
 from optimizers import SGD
-from trainers import BatchTrainer, SGDTrainer
+from trainers import BatchTrainer, MiniBatchTrainer, SGDTrainer
 
 
 model = Model(binary_loss, der_binary_cross_entropy, 100)  # for batch
@@ -17,5 +17,5 @@ default_rng(seed = 100).shuffle(dataset)
 features = dataset[:, [0, 1]]
 labels = dataset[:, 2].reshape((dataset.shape[0], 1))
 
-trainer = BatchTrainer(model, SGD())
-trainer.train(features, labels, epochs = 100)
+trainer = MiniBatchTrainer(model, SGD(), 16)
+trainer.train(features, labels, epochs = 10)
