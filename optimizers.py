@@ -6,7 +6,6 @@ class SGD():
 
     def set_model(self, model):
         self.model = model
-        print(self.model.weights)
     
     def gradients(self, weight_index, apply = False):
         value = -np.matmul(self.model.weights[weight_index].layer_2.del_, np.transpose(self.model.weights[weight_index].layer_1.a_))
@@ -63,12 +62,12 @@ class Adam(SGD):
         self.bias_std = list()
         self.beta1 = beta1
         self.beta2 = beta2
+        self.beta1_power = self.beta1
+        self.beta2_power = self.beta2
 
-        print("len:", self.model)
         for i in self.model.weights:
             self.weight_mean.append(np.zeros(i.gradients.shape))
             self.weight_std.append(np.zeros(i.gradients.shape))
-            print("added weights")
         for i in self.model.layers:
             self.bias_mean.append(np.zeros(i.b_gradients.shape))
             self.bias_std.append(np.zeros(i.b_gradients.shape))
@@ -77,23 +76,24 @@ class Adam(SGD):
     
     def reset(self):
         self.iteration = 1
+        self.beta1_power = self.beta1
+        self.beta2_power = self.beta2
 
     # time-step increments in on_pass(). but it is used whenever we do update_biases() or update_weights() from the Trainer.
     def current_gradient_weights(self, weight_index):
-        print("index:", weight_index)
         gradients = self.model.weights[weight_index].gradients
 
         weight_momentum = self.weight_mean[weight_index]
         weight_momentum = self.beta1 * weight_momentum - ((1 - self.beta2) * gradients)
-        weight_momentum /= (1 - self.beta1**self.iteration)
-        self.weight_mean[weight_index] = weight_momentum
+        self.weight_mean[weight_index] = weight_momentum  # accumulate un-normalized history of gradients
+        weight_m_normal = weight_momentum / (1 - self.beta1_power)  # normalize later
 
         weight_scale = self.weight_std[weight_index]
-        weight_scale = self.beta2 * weight_scale + ((1 - self.beta2) * gradients * gradients)
-        weight_scale /= (1 - self.beta2**self.iteration)
+        weight_scale = self.beta2 * weight_scale + ((1 - self.beta2) * np.square(gradients))
         self.weight_std[weight_index] = weight_scale
+        weight_s_normal = weight_scale / (1 - self.beta2_power)
 
-        return weight_momentum / np.sqrt(weight_scale + epsilon)
+        return weight_m_normal / np.sqrt(weight_s_normal + epsilon)
         
 
     def current_gradient_biases(self, layer_index):
@@ -101,18 +101,20 @@ class Adam(SGD):
 
         bias_momentum = self.bias_mean[layer_index]
         bias_momentum = self.beta1 * bias_momentum - ((1 - self.beta2) * gradients)
-        bias_momentum /= (1 - self.beta1**self.iteration)
         self.bias_mean[layer_index] = bias_momentum
+        bias_m_normal = bias_momentum /  (1 - self.beta1_power)
 
         bias_scale = self.bias_std[layer_index]
-        bias_scale = self.beta2 * bias_scale + ((1 - self.beta2) * gradients * gradients)
-        bias_scale /= (1 - self.beta2**self.iteration)
+        bias_scale = self.beta2 * bias_scale + ((1 - self.beta2) * np.square(gradients))
         self.bias_std[layer_index] = bias_scale
+        bias_s_normal = bias_scale / (1 - self.beta2_power)
 
-        return bias_momentum / np.sqrt(bias_scale + epsilon)
+        return bias_m_normal / np.sqrt(bias_s_normal + epsilon)
     
-    # 
+    
     def on_pass(self):
         super().on_pass()  # yes, reset gradients, [but not iteration?]
         self.iteration += 1
+        self.beta1_power *= self.beta1
+        self.beta2_power *= self.beta2
         

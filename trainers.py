@@ -8,6 +8,7 @@ class InstanceTrainer():
 
     def __init__(self, model, optimizer):
         self.model = model
+        self.model.init_weights()
         self.optimizer = optimizer
         self.optimizer.set_model(self.model)
     
@@ -37,7 +38,6 @@ class InstanceTrainer():
 
     def train(self, features, targets, epochs = 1):
         targets.reshape((targets.size,))
-        self.model.init_weights()
 
         for epoch in range(epochs):
             self.show_epoch(epoch)
@@ -118,7 +118,6 @@ class BatchTrainer(InstanceTrainer):
 
     def train(self, features, targets, epochs = 1):
         targets.reshape((targets.size,))
-        self.model.init_weights()
         self.batch_size = features.shape[0]
         
         for epoch in range(epochs):
@@ -145,9 +144,8 @@ class MiniBatchTrainer(BatchTrainer):
         self.minibatch_size = minibatch_size
     
     def train(self, features, targets, epochs = 1):
-        self.model.init_weights()
         targets.reshape((targets.size,))
-
+        
         for epoch in range(epochs):
             self.show_epoch(epoch)
             start_index = 0
@@ -161,7 +159,6 @@ class MiniBatchTrainer(BatchTrainer):
 
                 for j in range(1, len(self.model.layers)):
                     self.update_biases(j)
-                print("minibatch, len(self.model.weights):", len(self.model.weights))
                 for j in range(len(self.model.weights)):
                     self.update_weights(j)
                 

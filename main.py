@@ -17,5 +17,5 @@ default_rng(seed = 100).shuffle(dataset)
 features = dataset[:, [0, 1]]
 labels = dataset[:, 2].reshape((dataset.shape[0], 1))
 
-trainer = MiniBatchTrainer(model, Adam(), 16)
-trainer.train(features, labels, epochs = 10)
+trainer = BatchTrainer(model, SGD())
+trainer.train(features, labels, epochs = 100)
