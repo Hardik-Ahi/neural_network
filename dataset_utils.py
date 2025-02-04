@@ -11,29 +11,28 @@ def get_vector(seed = 12345, upper_bound = 10, n_samples = 10, zeros = False):
         vector = generator.integers(1, upper_bound, (n_samples, 1))
     return vector
 
-def and_gate_dataset():
+def and_gate_dataset(seed = 1000, positive_samples = 100):
     # features
-    both_positive = np.hstack((get_vector(seed = 187, n_samples = 100), get_vector(seed = 9, n_samples = 100)))
-    one_zero_1 = np.hstack((get_vector(zeros = True, n_samples = 50), get_vector(seed = 45, n_samples = 50)))
-    one_zero_2 = np.hstack((get_vector(seed = 987, n_samples = 50), get_vector(zeros = True, n_samples = 50)))
+    both_positive = np.hstack((get_vector(seed = 187, n_samples = positive_samples), get_vector(seed = 9, n_samples = positive_samples)))
+    one_zero_1 = np.hstack((get_vector(zeros = True, n_samples = positive_samples//2), get_vector(seed = 45, n_samples = positive_samples//2)))
+    one_zero_2 = np.hstack((get_vector(seed = 987, n_samples = positive_samples//2), get_vector(zeros = True, n_samples = positive_samples//2)))
     both_zero = np.array([0, 0])
     features = np.vstack((both_positive, one_zero_1, one_zero_2, both_zero))
 
+    print(f"features:{features.shape}")
     # labels
-    labels_positive = np.ones((100, 1), dtype = int)
-    labels_negative = np.zeros((101, 1), dtype = int)
+    labels_positive = np.ones((positive_samples, 1), dtype = int)
+    labels_negative = np.zeros((positive_samples//2 + positive_samples//2 + 1, 1), dtype = int)
     labels = np.vstack((labels_positive, labels_negative))
+    print(f"labels:{labels.shape}")
 
-    '''
-    features = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
-    labels = np.array([[0], [0], [0], [1]])'''
-
-    # dataset
     dataset = np.hstack((features, labels))
+    shuffler = default_rng(seed)
+    shuffler.shuffle(dataset)
     return dataset
 
 def get_minibatch(features, targets, batch_size = 1, start_at = 0):
-    # give this the same shuffled stuff every time
+    # give this the same stuff every time
     if start_at >= features.shape[0]:
         print("invalid start_at for get_minibatch")
         return None, None

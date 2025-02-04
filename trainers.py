@@ -80,7 +80,7 @@ class InstanceTrainer():
             total += i
         return (confusion_matrix['tp'] + confusion_matrix['tn']) / total
     
-    def predict(self, features, targets):
+    def predict(self, features, targets, output_predictions = False):
         targets = targets.reshape((targets.size,))
         predictions = list()
 
@@ -91,11 +91,15 @@ class InstanceTrainer():
         predictions = np.array(predictions)
         loss = self.model.loss_function(targets, predictions.reshape((predictions.size,)))
         print("Loss:", loss)
-        score = self.accuracy(targets, round(predictions))
+        predictions = round(predictions)
+        score = self.accuracy(targets, predictions)
         print("Accuracy:", score)
         print("Confusion matrix:", self.confusion_matrix(targets, round(predictions)))  # why suddenly getting 85% accuracy?
+        if output_predictions:
+            print("predictions:", predictions)
+            print("targets:    ", targets)
 
-
+# you got something right here! (it's working)
 class BatchTrainer(InstanceTrainer):
 
     def error_output_layer(self, layer_index, label):
