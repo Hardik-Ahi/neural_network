@@ -15,14 +15,16 @@ def sigmoid(x):
 def round(x):
     return 1 if x >= 0.5 else 0
 
-def binary_loss(labels, predictions, epsilon = epsilon_):
+def binary_loss(labels, predictions):
     total = predictions.size
     labels = labels.reshape(predictions.shape)
     summation = 0
 
-    for label, prediction in zip(labels, predictions):
-        summation -= label * np.log(max(prediction, epsilon)) + (1 - label) * np.log(max(1 - prediction, epsilon))
-    return (1 / total) * summation
+    predictions = np.clip(predictions, epsilon_, 1 - epsilon_)  # avoiding values of 0 ( => inf loss) and 1 ( => 0 loss)
+    iterator = zip(labels, predictions)
+    for label, prediction in iterator:
+        summation += label * np.log(prediction) + (1 - label) * np.log(1 - prediction)
+    return (-1 / total) * summation
 
 def der_binary_cross_entropy(label, output, epsilon = epsilon_):  # output belongs to range [0, 1]
     return ((1 - label)/((1 - output) + epsilon)) - (label / (output + epsilon))

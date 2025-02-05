@@ -19,12 +19,10 @@ def and_gate_dataset(seed = 1000, positive_samples = 100):
     both_zero = np.array([0, 0])
     features = np.vstack((both_positive, one_zero_1, one_zero_2, both_zero))
 
-    print(f"features:{features.shape}")
     # labels
     labels_positive = np.ones((positive_samples, 1), dtype = int)
     labels_negative = np.zeros((positive_samples//2 + positive_samples//2 + 1, 1), dtype = int)
     labels = np.vstack((labels_positive, labels_negative))
-    print(f"labels:{labels.shape}")
 
     dataset = np.hstack((features, labels))
     shuffler = default_rng(seed)

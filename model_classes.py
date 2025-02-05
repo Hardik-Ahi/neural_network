@@ -17,7 +17,7 @@ class Layer:
         self.b_ = self.init_biases()
     
     def init_biases(self):
-        return np.ones((self.n_neurons, 1)) * 2
+        return np.ones((self.n_neurons, 1), dtype = np.float32) * 2
 
 class Weights:
 
@@ -34,13 +34,13 @@ class Weights:
         std = sqrt(2 / source_neurons)  # standard deviation for 'He' initialization (use it if you use ReLU functions)
         generator = default_rng(seed)
 
-        weights = generator.standard_normal((destination_neurons, source_neurons)) * std  # z = x-mu / sigma, therefore x = z . sigma + mu; z = standard normal
+        weights = generator.standard_normal((destination_neurons, source_neurons), dtype = np.float32) * std  # z = x-mu / sigma, therefore x = z . sigma + mu; z = standard normal
         # here we need mu (mean) = 0, but standard deviation as per we calculated using fan_in.
         return weights
 
 class Model:
 
-    def __init__(self, loss_function, der_loss_function, seed):
+    def __init__(self, loss_function, der_loss_function, seed = 1000):
         self.layers = list()
         self.weights = list()
         self.loss_function = loss_function  # should be applicable to single instances and batches

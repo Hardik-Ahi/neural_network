@@ -98,6 +98,10 @@ class InstanceTrainer():
         if output_predictions:
             print("predictions:", predictions)
             print("targets:    ", targets)
+        print("weights:")
+        self.model.show_weights()
+        print("biases:")
+        self.model.show_biases()
 
 # you got something right here! (it's working)
 class BatchTrainer(InstanceTrainer):
