@@ -17,7 +17,7 @@ class Layer:
         self.b_ = self.init_biases()
     
     def init_biases(self):
-        return np.ones((self.n_neurons, 1), dtype = np.float32) * 2
+        return np.zeros((self.n_neurons, 1))
 
 class Weights:
 

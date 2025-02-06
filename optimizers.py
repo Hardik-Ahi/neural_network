@@ -8,7 +8,7 @@ class SGD():
         self.model = model
     
     def gradients(self, weight_index, apply = False):
-        value = -np.matmul(self.model.weights[weight_index].layer_2.del_, np.transpose(self.model.weights[weight_index].layer_1.a_))
+        value = np.matmul(self.model.weights[weight_index].layer_2.del_, np.transpose(self.model.weights[weight_index].layer_1.a_))
         if not apply:
             return value
         else:
@@ -21,7 +21,7 @@ class SGD():
         return self.model.layers[layer_index].b_gradients
     
     def error_output_layer(self, layer_index, label, apply = False):
-        value = -self.model.der_loss_function(
+        value = self.model.der_loss_function(
             label, self.model.layers[layer_index].a_[0][0]) * self.model.layers[layer_index].der_activation(self.model.layers[layer_index].z_)
         if not apply:
             return value
@@ -30,7 +30,7 @@ class SGD():
             self.model.layers[layer_index].b_gradients = value
 
     def error_layer(self, this_index, weight_index, apply = False):  # weights connecting this layer to next layer
-        value = -np.matmul(
+        value = np.matmul(
             np.transpose(self.model.weights[weight_index].matrix),
             self.model.layers[this_index+1].del_) * self.model.layers[this_index].der_activation(self.model.layers[this_index].z_)
         if not apply:

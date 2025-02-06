@@ -27,7 +27,8 @@ def binary_loss(labels, predictions):
     return (-1 / total) * summation
 
 def der_binary_cross_entropy(label, output, epsilon = epsilon_):  # output belongs to range [0, 1]
-    return ((1 - label)/((1 - output) + epsilon)) - (label / (output + epsilon))
+    output = np.clip(output, epsilon_, 1 - epsilon_)
+    return ((1 - label)/(1 - output)) - (label / output)
 
 def sigmoid_func(x):
     return 1 / (1 + np.exp(-x))

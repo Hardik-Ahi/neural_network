@@ -2,7 +2,7 @@ import numpy as np
 from dataset_utils import get_minibatch
 from model_functions import round
 
-l_rate = 0.01
+l_rate = 0.05
 
 class InstanceTrainer():
 
@@ -13,10 +13,10 @@ class InstanceTrainer():
         self.optimizer.set_model(self.model)
     
     def update_biases(self, layer_index, learning_rate = l_rate):
-        self.model.layers[layer_index].b_ += ((learning_rate) * self.optimizer.current_gradient_biases(layer_index))
+        self.model.layers[layer_index].b_ -= ((learning_rate) * self.optimizer.current_gradient_biases(layer_index))
     
     def update_weights(self, weight_index, learning_rate = l_rate):
-        self.model.weights[weight_index].matrix += ((learning_rate) * self.optimizer.current_gradient_weights(weight_index))
+        self.model.weights[weight_index].matrix -= ((learning_rate) * self.optimizer.current_gradient_weights(weight_index))
     
     def forward_pass(self, input_data):
         # input_data shape = (1, n_cols)
