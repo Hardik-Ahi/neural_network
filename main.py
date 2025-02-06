@@ -23,7 +23,7 @@ model.show_weights()
 model.show_biases()
 
 #print(f"dataset:{train}")
-trainer.train(X_train, y_train, epochs = 15)  # double YES!! got 100% accuracy in 250 epochs using leaky_relu with leak = 0.4!!
+trainer.train(X_train, y_train, epochs = 6)  # double YES!! got 100% accuracy in 250 epochs using leaky_relu with leak = 0.4!!
 
 test = and_gate_dataset(positive_samples = 200)  # this is some serious testing! gets 100% accuracy here!!!!
 X_test = test[:, [0, 1]]
@@ -37,3 +37,6 @@ trainer.predict(X_test, y_test)
 # if they start at the zero point, instead of starting at a high positive / negative point.
 # ADAM has something wrong; it is increasing the loss as training goes on.
 # all this means that no need to get exact same numbers as in keras, and clipping to avoid inf and 0 loss is good enough!
+
+# further info: leaky_relu's leak, the higher it is, the worse the accuracy. leak = 0.1 gives 100% accuracy in merely 5 epochs!!!!
+# but reducing leak further to 0.01 also performs worse; what's so special about the leak of 0.1? (maybe plug it in a derivation on paper)
