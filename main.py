@@ -9,6 +9,7 @@ from trainers import BatchTrainer, InstanceTrainer, MiniBatchTrainer
 
 model = Model(binary_loss, der_binary_cross_entropy, 100)  # for batch
 model.add_layer(Layer(2))  # input layer
+model.add_layer(Layer(2, relu, der_relu))
 model.add_layer(Layer(1, sigmoid, der_sigmoid))
 
 
@@ -22,4 +23,4 @@ model.show_weights()
 model.show_biases()
 
 #print(f"dataset:{train}")
-trainer.train(X_train, y_train, epochs = 500)
+trainer.train(X_train, y_train, epochs = 1000)

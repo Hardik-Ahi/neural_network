@@ -2,7 +2,7 @@ import numpy as np
 from dataset_utils import get_minibatch
 from model_functions import round
 
-l_rate = 0.05
+l_rate = 0.2
 
 class InstanceTrainer():
 
@@ -98,10 +98,10 @@ class InstanceTrainer():
         if output_predictions:
             print("predictions:", predictions)
             print("targets:    ", targets)
-        print("weights:")
+        '''print("weights:")
         self.model.show_weights()
         print("biases:")
-        self.model.show_biases()
+        self.model.show_biases()'''
 
 # you got something right here! (it's working)
 class BatchTrainer(InstanceTrainer):
