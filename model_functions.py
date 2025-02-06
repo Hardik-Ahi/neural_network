@@ -1,6 +1,6 @@
 import numpy as np
 
-leak_ = 0
+leak_ = 0.4
 epsilon_ = 1e-7
 
 @np.vectorize
