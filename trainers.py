@@ -1,6 +1,6 @@
 import numpy as np
 from dataset_utils import get_minibatch
-from functions import round
+from functions import round_off
 
 l_rate = 0.05
 
@@ -91,10 +91,10 @@ class InstanceTrainer():
         predictions = np.array(predictions)
         loss = self.model.loss_function(targets, predictions.reshape((predictions.size,)))
         print("Loss:", loss)
-        predictions = round(predictions)
+        predictions = round_off(predictions)
         score = self.accuracy(targets, predictions)
         print("Accuracy:", score)
-        print("Confusion matrix:", self.confusion_matrix(targets, round(predictions)))  # why suddenly getting 85% accuracy?
+        print("Confusion matrix:", self.confusion_matrix(targets, round_off(predictions)))  # why suddenly getting 85% accuracy?
         if output_predictions:
             print("predictions:", predictions)
             print("targets:    ", targets)

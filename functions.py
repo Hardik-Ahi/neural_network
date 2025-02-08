@@ -12,7 +12,7 @@ def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
 @np.vectorize
-def round(x):
+def round_off(x):
     return 1 if x >= 0.5 else 0
 
 def binary_loss(labels, predictions):
