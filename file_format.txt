@@ -1,0 +1,57 @@
+instance trainer (generalize using all 3 definitions)
+
+{epoch-n
+{batch-1 // each pass has 'n' fp, 'n' bp
+{fp-n
+{layer-n //activations (missing out on layer.z_), including input layer (data)
+layer-n}
+{weights-n
+weights-n}
+{bias-n
+bias-n}
+fp-n}
+{bp-n
+{err-output //scalar
+err-output}
+{err-n //layer.del_
+err-n}
+{gradient-weights-n //will accumulate across all forward passes for batchTrainer
+gradient-weights-n}
+{gradient-bias-n //for batchTrainer, layer.b_gradients != layer.del_
+gradient-bias-n}
+bp-n}
+batch-1}
+{updates-n
+{weights-n //updated
+weights-n}
+{bias-n //updated
+bias-n}
+updates-n}
+epoch-n}
+=============================================================
+batch trainer
+
+{epoch-n
+{batch-1 //here, n = 1 always, and has 'n' fp and 'n' bp
+{fp-n
+fp-n}
+{bp-n
+bp-n}
+batch-1}
+{updates-1 // for Instance, updates = n. here, updates = 1
+updates-1}
+epoch-n}
+
+=============================================================
+mini batch trainer
+
+{epoch-n
+{batch-n // here, 'n' batches (mini-batches)
+{fp-n
+fp-n}
+{bp-n
+bp-n}
+batch-n}
+{updates-n // 1 update for 1 batch of data
+updates-n}
+epoch-n}
