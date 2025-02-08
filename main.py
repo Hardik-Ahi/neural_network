@@ -1,8 +1,8 @@
 import numpy as np
 from numpy.random import default_rng
-from model_classes import Layer, Model
+from classes import Layer, Model
 from dataset_utils import and_gate_dataset, standardize_data
-from model_functions import der_relu, der_sigmoid, relu, sigmoid, der_binary_cross_entropy, binary_loss
+from functions import der_relu, der_sigmoid, relu, sigmoid, der_binary_cross_entropy, binary_loss
 from optimizers import SGD, Adam
 from trainers import BatchTrainer, InstanceTrainer, MiniBatchTrainer
 

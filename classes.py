@@ -2,7 +2,7 @@ import numpy as np
 from numpy.random import default_rng
 from math import sqrt
 from dataset_utils import get_minibatch
-from model_functions import binary_loss
+from functions import binary_loss
 
 class Layer:
 

@@ -1,6 +1,6 @@
 import numpy as np
 from dataset_utils import get_minibatch
-from model_functions import round
+from functions import round
 
 l_rate = 0.05
 
