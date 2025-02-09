@@ -34,7 +34,7 @@ class Weights:
         std = sqrt(2 / source_neurons)  # standard deviation for 'He' initialization (use it if you use ReLU functions)
         generator = default_rng(seed)
 
-        weights = generator.standard_normal((destination_neurons, source_neurons), dtype = np.float32) * std  # z = x-mu / sigma, therefore x = z . sigma + mu; z = standard normal
+        weights = generator.standard_normal((destination_neurons, source_neurons)) * std  # z = x-mu / sigma, therefore x = z . sigma + mu; z = standard normal
         # here we need mu (mean) = 0, but standard deviation as per we calculated using fan_in.
         return weights
 
