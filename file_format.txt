@@ -1,10 +1,10 @@
 instance trainer (generalize using all 3 definitions)
 
 {epoch-n
-{batch-1 // each pass has 'n' fp, 'n' bp
+{batch-n // each pass has 'n' fp, 'n' bp
 {fp-n
-{layer-n //activations (missing out on layer.z_), including input layer (data)
-layer-n}
+{activation-n //activations (missing out on layer.z_), including input layer (data)
+activation-n}
 {weights-n
 weights-n}
 {bias-n
@@ -15,18 +15,20 @@ fp-n}
 err-output}
 {err-n //layer.del_
 err-n}
-{gradient-weights-n //will accumulate across all forward passes for batchTrainer
-gradient-weights-n}
-{gradient-bias-n //for batchTrainer, layer.b_gradients != layer.del_
-gradient-bias-n}
+{current-gradient-n //for weights; will accumulate across all forward passes for batchTrainer
+current-gradient-n}
 bp-n}
-batch-1}
-{updates-n
+batch-n}
+{update-n
+{weights-gradient-n //for adam; this represents the gradient that will be applied.
+weights-gradient-n}
+{bias-gradient-n //layer.b_gradients != layer.del_
+bias-gradient-n}
 {weights-n //updated
 weights-n}
 {bias-n //updated
 bias-n}
-updates-n}
+update-n}
 epoch-n}
 =============================================================
 batch trainer
