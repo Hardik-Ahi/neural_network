@@ -211,9 +211,10 @@ class Logger:
             print(f"access to {directory} not allowed")
             return
         
-        path = directory + "/output_" + str(time.time_ns()) +".json"
+        path = directory + "/output_" + str(time.time_ns()) +".txt"
+        string = json.dumps(self.object)
         with open(path, 'w') as file:
-            json.dump(self.object, file)
+            file.write(string)
 
         print(f'output written to {path}')
         self.object = dict()

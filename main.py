@@ -16,12 +16,12 @@ train = and_gate_dataset(positive_samples = 100)
 X_train = train[:, [0, 1]]
 y_train = train[:, 2].reshape((train.shape[0], 1))
 
-trainer = Trainer(model, SGD(), 8)  # YES! got 100% accuracy in 1500 epochs using sigmoid activation function all-around!
+trainer = Trainer(model, SGD(), 1)  # YES! got 100% accuracy in 1500 epochs using sigmoid activation function all-around!
 model.show_weights()
 model.show_biases()
 
 #print(f"dataset:{train}")
-trainer.train(X_train, y_train, epochs = 20)  # double YES!! got 100% accuracy in 250 epochs using leaky_relu with leak = 0.4!!
+trainer.train(X_train, y_train, epochs = 6)  # double YES!! got 100% accuracy in 250 epochs using leaky_relu with leak = 0.4!!
 
 test = and_gate_dataset(positive_samples = 200)  # this is some serious testing! gets 100% accuracy here!!!!
 X_test = test[:, [0, 1]]
