@@ -1,10 +1,8 @@
-import numpy as np
-from numpy.random import default_rng
 from classes import Layer, Model
-from dataset_utils import and_gate_dataset, standardize_data
+from dataset_utils import and_gate_dataset
 from functions import der_relu, der_sigmoid, relu, sigmoid, der_binary_cross_entropy, binary_loss
-from optimizers import SGD, Adam
-from trainers import BatchTrainer, InstanceTrainer, MiniBatchTrainer
+from optimizers import SGD
+from trainer import Trainer
 
 
 model = Model(binary_loss, der_binary_cross_entropy, 100)  # for batch
@@ -18,7 +16,7 @@ train = and_gate_dataset(positive_samples = 100)
 X_train = train[:, [0, 1]]
 y_train = train[:, 2].reshape((train.shape[0], 1))
 
-trainer = InstanceTrainer(model, SGD())  # YES! got 100% accuracy in 1500 epochs using sigmoid activation function all-around!
+trainer = Trainer(model, SGD(), 1)  # YES! got 100% accuracy in 1500 epochs using sigmoid activation function all-around!
 model.show_weights()
 model.show_biases()
 

@@ -7,37 +7,23 @@ class SGD():
     def set_model(self, model):
         self.model = model
     
-    def gradients(self, weight_index, apply = False):
-        value = np.matmul(self.model.weights[weight_index].layer_2.del_, np.transpose(self.model.weights[weight_index].layer_1.a_))
-        if not apply:
-            return value
-        else:
-            self.model.weights[weight_index].gradients = value
+    def current_gradient(self, weight_index):
+        return np.matmul(self.model.weights[weight_index].layer_2.del_, np.transpose(self.model.weights[weight_index].layer_1.a_))
     
-    def current_gradient_weights(self, weight_index):
+    def gradient_weights(self, weight_index):
         return self.model.weights[weight_index].gradients
 
-    def current_gradient_biases(self, layer_index):
+    def gradient_biases(self, layer_index):
         return self.model.layers[layer_index].b_gradients
     
-    def error_output_layer(self, layer_index, label, apply = False):
-        value = self.model.der_loss_function(
+    def error_output_layer(self, layer_index, label):
+        return self.model.der_loss_function(
             label, self.model.layers[layer_index].a_[0][0]) * self.model.layers[layer_index].der_activation(self.model.layers[layer_index].z_)
-        if not apply:
-            return value
-        else:
-            self.model.layers[layer_index].del_ = value
-            self.model.layers[layer_index].b_gradients = value
 
-    def error_layer(self, this_index, weight_index, apply = False):  # weights connecting this layer to next layer
-        value = np.matmul(
+    def error_layer(self, this_index, weight_index):  # weights connecting this layer to next layer
+        return np.matmul(
             np.transpose(self.model.weights[weight_index].matrix),
             self.model.layers[this_index+1].del_) * self.model.layers[this_index].der_activation(self.model.layers[this_index].z_)
-        if not apply:
-            return value
-        else:
-            self.model.layers[this_index].del_ = value
-            self.model.layers[this_index].b_gradients = value
         
     def on_pass(self):
         # reset gradients
@@ -80,7 +66,7 @@ class Adam(SGD):
         self.beta2_power = self.beta2
 
     # time-step increments in on_pass(). but it is used whenever we do update_biases() or update_weights() from the Trainer.
-    def current_gradient_weights(self, weight_index):
+    def gradient_weights(self, weight_index):
         gradients = self.model.weights[weight_index].gradients
 
         weight_momentum = self.weight_mean[weight_index]
@@ -96,7 +82,7 @@ class Adam(SGD):
         return np.divide(weight_m_normal, np.sqrt(weight_s_normal + epsilon))
         
 
-    def current_gradient_biases(self, layer_index):
+    def gradient_biases(self, layer_index):
         gradients = self.model.layers[layer_index].b_gradients
 
         bias_momentum = self.bias_mean[layer_index]
