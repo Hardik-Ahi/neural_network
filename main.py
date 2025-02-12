@@ -1,4 +1,4 @@
-from classes import Layer, Model
+from model_classes import Layer, Model
 from dataset_utils import and_gate_dataset
 from functions import der_relu, der_sigmoid, relu, sigmoid, der_binary_cross_entropy, binary_loss
 from optimizers import SGD

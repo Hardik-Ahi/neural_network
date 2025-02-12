@@ -1,13 +1,11 @@
 import numpy as np
 from dataset_utils import get_minibatch
 from functions import round_off
-import json
-import os
-import time
+import json, os, time
 
 l_rate = 0.05
 
-class Trainer():
+class Trainer:
 
     def __init__(self, model, optimizer, minibatch_size = None):  # None means batch GD. for stochastic, specify '1'.
         self.model = model
@@ -90,7 +88,7 @@ class Trainer():
                 start_index += self.batch_size
                 batch += 1
             self.predict(features, targets)
-        self.logger.write_log('./logs')
+        self.logger.write_log()
     
     def confusion_matrix(self, labels, predictions):
         predictions = predictions.reshape((predictions.size, 1))
@@ -206,15 +204,24 @@ class Logger:
         for i in range(len(model_layers)):
             ref[f'bias-{i}'] = model_layers[i].b_.tolist()
         
-    def write_log(self, directory = "."):
+    def write_log(self, directory = "./logs", name = None):
         if not os.access(directory, os.F_OK):
             print(f"access to {directory} not allowed")
             return
         
-        path = directory + "/output_" + str(time.time_ns()) +".txt"
+        path = f'{directory + ("/output_" + str(time.time_ns()) if name is None else name)}.txt'
         string = json.dumps(self.object)
         with open(path, 'w') as file:
             file.write(string)
 
         print(f'output written to {path}')
         self.object = dict()
+    
+    @staticmethod
+    def load_data(path):
+        if not os.path.exists(path):
+            print(f"{path} does not exist.")
+            return
+        with open(path, 'r') as f:
+            data = json.loads(f.read())
+        return data

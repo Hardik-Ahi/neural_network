@@ -1,9 +1,9 @@
-instance trainer (generalize using all 3 definitions)
+trainer (generalize using all 3 definitions)
 
 {epoch-n
-{batch-n // each pass has 'n' fp, 'n' bp
+{batch-n  // mini-batch number
 {fp-n
-{activation-n //activations (missing out on layer.z_), including input layer (data)
+{activation-n  // activations (not layer.z_), including input layer (=> data)
 activation-n}
 {weights-n
 weights-n}
@@ -11,49 +11,22 @@ weights-n}
 bias-n}
 fp-n}
 {bp-n
-{err-output //scalar
+{err-output
 err-output}
-{err-n //layer.del_
+{err-n  // layer.del_
 err-n}
-{current-gradient-n //for weights; will accumulate across all forward passes for batchTrainer
+{current-gradient-n  // for weights; normalized by mini-batch size.
 current-gradient-n}
 bp-n}
 batch-n}
 {update-n
-{weights-gradient-n //for adam; this represents the gradient that will be applied.
+{weights-gradient-n  // gradient that will be applied (given by optimizer)
 weights-gradient-n}
-{bias-gradient-n //layer.b_gradients != layer.del_
+{bias-gradient-n  // layer.b_gradients, also given by optimizer
 bias-gradient-n}
-{weights-n //updated
+{weights-n  // updated
 weights-n}
-{bias-n //updated
+{bias-n  // updated
 bias-n}
 update-n}
-epoch-n}
-=============================================================
-batch trainer
-
-{epoch-n
-{batch-1 //here, n = 1 always, and has 'n' fp and 'n' bp
-{fp-n
-fp-n}
-{bp-n
-bp-n}
-batch-1}
-{updates-1 // for Instance, updates = n. here, updates = 1
-updates-1}
-epoch-n}
-
-=============================================================
-mini batch trainer
-
-{epoch-n
-{batch-n // here, 'n' batches (mini-batches)
-{fp-n
-fp-n}
-{bp-n
-bp-n}
-batch-n}
-{updates-n // 1 update for 1 batch of data
-updates-n}
 epoch-n}
