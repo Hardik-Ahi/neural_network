@@ -66,5 +66,5 @@ class Plotter:
 
 plotter = Plotter()
 plotter.set_model_info(3)
-plotter.read_file("logs\output_1739372926601414700.txt")
+plotter.read_file("logs\output_1739454483258580600.txt")
 plotter.plot_gradients()

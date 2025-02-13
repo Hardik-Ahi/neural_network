@@ -3,7 +3,7 @@ from dataset_utils import get_minibatch
 from functions import round_off
 import json, os, time
 
-l_rate = 0.01
+l_rate = 0.05
 
 class Trainer:
 
