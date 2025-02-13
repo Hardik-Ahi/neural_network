@@ -3,7 +3,7 @@ from dataset_utils import get_minibatch
 from functions import round_off
 import json, os, time
 
-l_rate = 0.05
+l_rate = 0.01
 
 class Trainer:
 
@@ -55,7 +55,7 @@ class Trainer:
         
         
     
-    def train(self, features, targets, epochs = 1):
+    def train(self, features, targets, epochs = 1, output_dir = "./logs", output_name = None):
         targets.reshape((targets.size,))
         if self.minibatch_size is None:
             self.minibatch_size = features.shape[0]
@@ -88,7 +88,7 @@ class Trainer:
                 start_index += self.batch_size
                 batch += 1
             self.predict(features, targets)
-        self.logger.write_log()
+        self.logger.write_log(output_dir, output_name)
     
     def confusion_matrix(self, labels, predictions):
         predictions = predictions.reshape((predictions.size, 1))
@@ -209,7 +209,7 @@ class Logger:
             print(f"access to {directory} not allowed")
             return
         
-        path = f'{directory + ("/output_" + str(time.time_ns()) if name is None else name)}.txt'
+        path = f'{directory}/{("output_" + str(time.time_ns()) if name is None else name)}.txt'
         string = json.dumps(self.object)
         with open(path, 'w') as file:
             file.write(string)

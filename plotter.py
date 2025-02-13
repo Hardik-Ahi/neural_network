@@ -18,7 +18,7 @@ class Plotter:
         if not os.access(directory, os.F_OK):
             print(f'cannot access {directory}')
             return
-        name = f'{"output_" + str(time.time_ns()) if name is None else name}.png'
+        name = f'/{"output_" + str(time.time_ns()) if name is None else name}.png'
 
         weights_gradients = dict()
         bias_gradients = dict()
@@ -41,26 +41,28 @@ class Plotter:
                 except KeyError:
                     break
         
-        fig, axs = plt.subplots(2, self.n_layers-1, figsize = (12, 7))
-
+        fig, axs = plt.subplots(2, self.n_layers-1, figsize = (12, 7), gridspec_kw = {'wspace': 0.2, 'hspace': 0.3})
+        fig.suptitle(f'Applied Gradients', size = 'xx-large')
         # weights
         for ax in range(self.n_layers-1):
             weight = f'weights-gradient-{ax}'
             weights_gradients[weight] = np.asarray(weights_gradients[weight])
             for r in range(weights_gradients[weight][0].shape[0]):
                 for c in range(weights_gradients[weight][0].shape[1]):
-                    axs[0, ax].plot(weights_gradients[weight][:, r, c], label = f'w{ax}|r:{r},c:{c}')
-                    axs[0, ax].legend()
+                    axs[0, ax].plot(weights_gradients[weight][:, r, c], label = f'[{r}, {c}]')
+                    axs[0, ax].legend(title = 'elements')
+                    axs[0, ax].set_title(f'weights-{ax}')
         
         # bias
         for ax in range(1, self.n_layers):
             bias = f'bias-gradient-{ax}'
             bias_gradients[bias] = np.asarray(bias_gradients[bias])
             for r in range(bias_gradients[bias][0].shape[0]):
-                    axs[1, ax-1].plot(bias_gradients[bias][:, r, 0], label = f'b{ax}|r:{r}')
-                    axs[1, ax-1].legend()
+                    axs[1, ax-1].plot(bias_gradients[bias][:, r, 0], label = f'[{r}]')
+                    axs[1, ax-1].legend(title = 'elements')
+                    axs[1, ax-1].set_title(f'bias-{ax-1}')
         
-        fig.savefig(directory + "/" + name, bbox_inches = "tight")
+        fig.savefig(directory + name, bbox_inches = "tight")
 
 plotter = Plotter()
 plotter.set_model_info(3)
