@@ -18,7 +18,7 @@ class Plotter:
         if not os.access(directory, os.F_OK):
             print(f'cannot access {directory}')
             return
-        name = f'/{"output_" + str(time.time_ns()) if name is None else name}.png'
+        name = f'/{"output_" + str(time.ctime(time.time())).replace(":", "-") if name is None else name}.png'
 
         weights_gradients = dict()
         bias_gradients = dict()
@@ -66,5 +66,5 @@ class Plotter:
 
 plotter = Plotter()
 plotter.set_model_info(3)
-plotter.read_file("logs\output_1739454483258580600.txt")
+plotter.read_file("logs\output_Thu Feb 13 19-54-16 2025.txt")
 plotter.plot_gradients()
