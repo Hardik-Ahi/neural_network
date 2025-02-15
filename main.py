@@ -9,14 +9,14 @@ model = Model(binary_loss, der_binary_cross_entropy, 100)  # for batch
 model.add_layer(Layer(2))  # input layer
 model.add_layer(Layer(2, relu, der_relu))
 model.add_layer(Layer(1, sigmoid, der_sigmoid))
-
+model.compile()
 
 train = and_gate_dataset(positive_samples = 100)
 # train = np.array([[0, 0, 0], [1, 1, 0], [0, 1, 1], [1, 0, 1]])  # all activations = sigmoid, reached 100% accuracy in 4000 epochs! (XOR problem solved)
 X_train = train[:, [0, 1]]
 y_train = train[:, 2].reshape((train.shape[0], 1))
 
-trainer = Trainer(model, SGD(), 1)  # YES! got 100% accuracy in 1500 epochs using sigmoid activation function all-around!
+trainer = Trainer(model, SGD(), 1, 0.05)  # YES! got 100% accuracy in 1500 epochs using sigmoid activation function all-around!
 model.show_weights()
 model.show_biases()
 
@@ -26,9 +26,14 @@ trainer.train(X_train, y_train, epochs = 6)  # double YES!! got 100% accuracy in
 test = and_gate_dataset(positive_samples = 200)  # this is some serious testing! gets 100% accuracy here!!!!
 X_test = test[:, [0, 1]]
 y_test = test[:, 2]
-print("testing:")
-trainer.predict(X_test, y_test)
 
+# load weights
+model.load_weights('./models/test.npz')
+model.show_weights()
+model.show_biases()
+
+print("testing with loaded weights")
+trainer.predict(X_test, y_test)
 # what the ?! is happening: got 100% accuracy in 12 epochs using InstanceTrainer!!!
 # and MiniBatchTrainer() performs more like InstanceTrainer with lower batch sizes (4, 8, 16) and more like BatchTrainer with higher sizes (32 etc).
 # biases are now all zeros. we read something about them being able to contribute to training non-intrusively (and with lesser impact) 

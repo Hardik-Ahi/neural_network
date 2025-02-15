@@ -3,14 +3,12 @@ from dataset_utils import get_minibatch
 from functions import round_off
 import json, os, time
 
-l_rate = 0.05
-
 class Trainer:
 
-    def __init__(self, model, optimizer, minibatch_size = None):  # None means batch GD. for stochastic, specify '1'.
+    def __init__(self, model, optimizer, minibatch_size = None, learning_rate = 0.01):  # None means batch GD. for stochastic, specify '1'.
         self.model = model
-        self.model.init_weights()
         self.minibatch_size = minibatch_size
+        self.learning_rate = learning_rate
         self.optimizer = optimizer
         self.optimizer.set_model(self.model)
         self.logger = Logger()
@@ -36,14 +34,14 @@ class Trainer:
     def current_gradient(self, weight_index):
         self.model.weights[weight_index].gradients += self.optimizer.current_gradient(weight_index) / self.batch_size
     
-    def update_biases(self, layer_index, learning_rate = l_rate):
+    def update_biases(self, layer_index):
         value = self.optimizer.gradient_biases(layer_index)
-        self.model.layers[layer_index].b_ -= ((learning_rate) * value)
+        self.model.layers[layer_index].b_ -= ((self.learning_rate) * value)
         self.logger.log_update_bias(layer_index, value)
     
-    def update_weights(self, weight_index, learning_rate = l_rate):
+    def update_weights(self, weight_index):
         value = self.optimizer.gradient_weights(weight_index)
-        self.model.weights[weight_index].matrix -= ((learning_rate) * value)
+        self.model.weights[weight_index].matrix -= ((self.learning_rate) * value)
         self.logger.log_update_weights(weight_index, value)
     
     def forward_pass(self, input_data):

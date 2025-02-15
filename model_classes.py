@@ -1,8 +1,7 @@
 import numpy as np
 from numpy.random import default_rng
 from math import sqrt
-from dataset_utils import get_minibatch
-from functions import binary_loss
+import os
 
 class Layer:
 
@@ -51,7 +50,7 @@ class Model:
         self.layers.append(layer)
     
     # part of model compiler
-    def init_weights(self):
+    def compile(self):
         generator = default_rng(seed = self.seed)
         seeds = generator.integers(0, len(self.layers)*100, (len(self.layers)-1,))
 
@@ -65,3 +64,38 @@ class Model:
     def show_biases(self):
         for i in range(1, len(self.layers)):
             print(i, self.layers[i].b_, sep = "\n")
+
+    def save_weights(self, path):
+        # path = entire path of file to be created
+        weights_dict = dict()
+        bias_dict = dict()
+
+        for i in range(len(self.weights)):
+            name = f'weights-{i}'
+            weights_dict[name] = self.weights[i].matrix
+        for i in range(len(self.layers)):
+            name = f'bias-{i}'
+            bias_dict[name] = self.layers[i].b_
+
+        np.savez(path, allow_pickle = False, **weights_dict, **bias_dict)
+    
+    def load_weights(self, path):
+        if not os.path.exists:
+            print(f'{path} does not exist')
+            return
+
+        with np.load(path) as data:
+            weights_keys = list(filter(lambda x: x.startswith("weights"), data.keys()))
+            bias_keys = list(filter(lambda x: x.startswith("bias"), data.keys()))
+            try:
+                for i in range(len(weights_keys)):
+                    name = f'weights-{i}'
+                    self.weights[i].matrix = data[name]
+                for i in range(len(bias_keys)):
+                    name = f'bias-{i}'
+                    self.layers[i].b_ = data[name]
+            except IndexError:
+                print("model structure does not match with loaded weights")
+                return
+        
+        print("loaded successfully")
