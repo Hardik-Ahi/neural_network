@@ -206,8 +206,8 @@ class Logger:
         if not os.access(directory, os.F_OK):
             print(f"access to {directory} not allowed")
             return
-        
-        path = f'{directory}/{"output_" + str(time.ctime(time.time())).replace(":", "-") if name is None else name}.txt'
+        time_str = time.strftime("%I-%M-%S_%p", time.localtime(time.time()))
+        path = f'{directory}/{"output_" + time_str if name is None else name}.txt'
         string = json.dumps(self.object)
         with open(path, 'w') as file:
             file.write(string)

@@ -1,3 +1,4 @@
+import numpy as np
 from model_classes import Layer, Model
 from dataset_utils import and_gate_dataset
 from functions import der_relu, der_sigmoid, relu, sigmoid, der_binary_cross_entropy, binary_loss
@@ -10,6 +11,12 @@ model.add_layer(Layer(2))  # input layer
 model.add_layer(Layer(2, relu, der_relu))
 model.add_layer(Layer(1, sigmoid, der_sigmoid))
 model.compile()
+
+# showing that when output falls in negative part of relu, with leak = 0, no gradients are observed throughout training.
+model.weights[0].matrix = np.array([
+    [-0.1, -0.01],
+    [-0.06, -0.04]
+])
 
 train = and_gate_dataset(positive_samples = 100)
 # train = np.array([[0, 0, 0], [1, 1, 0], [0, 1, 1], [1, 0, 1]])  # all activations = sigmoid, reached 100% accuracy in 4000 epochs! (XOR problem solved)
