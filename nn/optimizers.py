@@ -1,6 +1,5 @@
 import numpy as np
 
-epsilon = 1e-7
 # optimizer will give the trainer the gradients[] matrix to apply to the weights.
 class SGD():
 
@@ -40,8 +39,7 @@ class SGD():
 # the weights and biases so that THEY can calculate their gradients (modified or not) correctly.
 class Adam(SGD):
 
-    def set_model(self, model, beta1 = 0.9, beta2 = 0.999):
-        super().set_model(model)
+    def __init__(self, beta1 = 0.9, beta2 = 0.999, epsilon = 1e-7):
         self.weight_mean = list()
         self.weight_std = list()
         self.bias_mean = list()
@@ -50,7 +48,11 @@ class Adam(SGD):
         self.beta2 = beta2
         self.beta1_power = beta1
         self.beta2_power = beta2
-
+        self.epsilon = epsilon
+        self.iteration = 1  # increment this in self.on_pass()
+    
+    def set_model(self, model):
+        super().set_model(model)
         for i in self.model.weights:
             self.weight_mean.append(np.zeros(i.gradients.shape))
             self.weight_std.append(np.zeros(i.gradients.shape))
@@ -58,8 +60,6 @@ class Adam(SGD):
             self.bias_mean.append(np.zeros(i.b_gradients.shape))
             self.bias_std.append(np.zeros(i.b_gradients.shape))
         
-        self.iteration = 1  # increment this in self.on_pass()
-    
     def reset(self):
         self.iteration = 1
         self.beta1_power = self.beta1
@@ -79,7 +79,7 @@ class Adam(SGD):
         weight_s_normal = weight_scale / (1 - self.beta2_power)
         self.weight_std[weight_index] = weight_s_normal
 
-        return np.divide(weight_m_normal, np.sqrt(weight_s_normal + epsilon))
+        return np.divide(weight_m_normal, np.sqrt(weight_s_normal + self.epsilon))
         
 
     def gradient_biases(self, layer_index):
@@ -95,7 +95,7 @@ class Adam(SGD):
         bias_s_normal = bias_scale / (1 - self.beta2_power)
         self.bias_std[layer_index] = bias_s_normal
 
-        return np.divide(bias_m_normal, np.sqrt(bias_s_normal + epsilon))
+        return np.divide(bias_m_normal, np.sqrt(bias_s_normal + self.epsilon))
     
     
     def on_pass(self):
