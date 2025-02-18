@@ -65,8 +65,13 @@ class Model:
         for i in range(1, len(self.layers)):
             print(i, self.layers[i].b_, sep = "\n")
 
-    def save_weights(self, path):
+    def save_weights(self, dir, name):
         # path = entire path of file to be created
+        if not os.path.exists(dir):
+            print(f'{dir} does not exist.')
+            return
+        
+        path = dir + "/" + name
         weights_dict = dict()
         bias_dict = dict()
 

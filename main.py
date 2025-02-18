@@ -1,10 +1,10 @@
 import numpy as np
-from model_classes import Layer, Model
-from dataset_utils import and_gate_dataset
-from functions import der_relu, der_sigmoid, relu, sigmoid, der_binary_cross_entropy, binary_loss
-from optimizers import SGD
-from trainer import Trainer
-
+from nn.model_classes import Layer, Model
+from nn.dataset_utils import and_gate_dataset
+from nn.functions import der_relu, der_sigmoid, relu, sigmoid, der_binary_cross_entropy, binary_loss
+from nn.optimizers import SGD
+from nn.trainer import Trainer
+from nn.plotter import Plotter
 
 model = Model(binary_loss, der_binary_cross_entropy, 100)  # for batch
 model.add_layer(Layer(2))  # input layer
@@ -29,6 +29,7 @@ model.show_biases()
 
 #print(f"dataset:{train}")
 trainer.train(X_train, y_train, epochs = 6)  # double YES!! got 100% accuracy in 250 epochs using leaky_relu with leak = 0.4!!
+trainer.save_history("./logs", "test")
 
 test = and_gate_dataset(positive_samples = 200)  # this is some serious testing! gets 100% accuracy here!!!!
 X_test = test[:, [0, 1]]
@@ -50,3 +51,8 @@ trainer.predict(X_test, y_test)
 
 # further info: leaky_relu's leak, the higher it is, the worse the accuracy. leak = 0.1 gives 100% accuracy in merely 5 epochs!!!!
 # but reducing leak further to 0.01 also performs worse; what's so special about the leak of 0.1? (maybe plug it in a derivation on paper)
+
+plotter = Plotter()
+plotter.set_model_layers(3)
+plotter.read_file(r'logs\test.txt')
+plotter.plot_gradients('./plots')

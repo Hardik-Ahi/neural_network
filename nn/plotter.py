@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from trainer import Logger
+from nn.trainer import Logger
 import os, time
 
 class Plotter:
@@ -11,15 +11,15 @@ class Plotter:
         else:
             print("file read.")
     
-    def set_model_info(self, n_layers):
+    def set_model_layers(self, n_layers):
         self.n_layers = n_layers
     
-    def plot_gradients(self, directory = "./plots", name = None):
-        if not os.access(directory, os.F_OK):
-            print(f'cannot access {directory}')
+    def plot_gradients(self, dir, name = None):
+        if not os.access(dir, os.F_OK):
+            print(f'cannot access {dir}')
             return
         time_str = time.strftime("%I-%M-%S_%p", time.localtime(time.time()))
-        name = f'/{"output_" + time_str if name is None else name}.png'
+        name = "/" + ("output_" + time_str if name is None else name) + ".png"
 
         weights_gradients = dict()
         bias_gradients = dict()
@@ -63,9 +63,6 @@ class Plotter:
                     axs[1, ax-1].legend(title = 'elements')
                     axs[1, ax-1].set_title(f'bias-{ax-1}')
         
-        fig.savefig(directory + name, bbox_inches = "tight")
-
-plotter = Plotter()
-plotter.set_model_info(3)
-plotter.read_file("logs\output_07-54-08_PM.txt")
-plotter.plot_gradients()
+        fig.savefig(dir + name, bbox_inches = "tight")
+        print(f'plot saved at {dir + name}')
+        plt.show()  # awesome pop-up window when using vs code!

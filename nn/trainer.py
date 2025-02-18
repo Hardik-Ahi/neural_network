@@ -1,6 +1,6 @@
 import numpy as np
-from dataset_utils import get_minibatch
-from functions import round_off
+from nn.dataset_utils import get_minibatch
+from nn.functions import round_off
 import json, os, time
 
 class Trainer:
@@ -51,9 +51,10 @@ class Trainer:
             self.model.layers[i].z_ = np.matmul(self.model.weights[i-1].matrix, self.model.layers[i-1].a_) + self.model.layers[i].b_
             self.model.layers[i].a_ = self.model.layers[i].activation(self.model.layers[i].z_)
         
-        
+    def save_history(self, dir, name = None):
+        self.logger.write_log(dir, name)
     
-    def train(self, features, targets, epochs = 1, output_dir = "./logs", output_name = None):
+    def train(self, features, targets, epochs = 1):
         targets.reshape((targets.size,))
         if self.minibatch_size is None:
             self.minibatch_size = features.shape[0]
@@ -86,7 +87,6 @@ class Trainer:
                 start_index += self.batch_size
                 batch += 1
             self.predict(features, targets)
-        self.logger.write_log(output_dir, output_name)
     
     def confusion_matrix(self, labels, predictions):
         predictions = predictions.reshape((predictions.size, 1))
