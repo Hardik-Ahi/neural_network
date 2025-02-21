@@ -12,6 +12,7 @@ model.add_layer(Layer(2, leaky_relu(), der_leaky_relu()))
 model.add_layer(Layer(1, sigmoid, der_sigmoid))
 model.compile()
 
+
 # showing that when output falls in negative part of relu, with leak = 0, no gradients are observed throughout training.
 model.weights[0].matrix = np.array([
     [-0.1, -0.01],
@@ -56,3 +57,4 @@ plotter = Plotter()
 plotter.set_model_layers(3)
 plotter.read_file(r'logs\test.txt')
 plotter.plot_gradients('./plots')
+plotter.plot_weights('./plots')

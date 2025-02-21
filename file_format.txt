@@ -1,14 +1,17 @@
 trainer (generalize using all 3 definitions)
 
-{epoch-n
-{batch-n  // mini-batch number
-{fp-n
-{activation-n  // activations (not layer.z_), including input layer (=> data)
-activation-n}
+{init
 {weights-n
 weights-n}
 {bias-n
 bias-n}
+init}
+
+{epoch-n
+{batch-n  // mini-batch number
+{fp-n
+{activation-n  // activations (layer.a_), including input layer (=> data)
+activation-n}
 fp-n}
 {bp-n
 {err-output
@@ -30,3 +33,6 @@ weights-n}
 bias-n}
 update-n}
 epoch-n}
+
+in 1 epoch, n batches = n updates
+in 1 batch, n fp = n bp

@@ -168,9 +168,6 @@ class Logger:
 
         for i in range(len(model_layers)):
             ref[f'fp-{fp}'][f'activation-{i}'] = model_layers[i].a_.tolist()
-            ref[f'fp-{fp}'][f'bias-{i}'] = model_layers[i].b_.tolist()
-        for i in range(len(model_weights)):
-            ref[f'fp-{fp}'][f'weights-{i}'] = model_weights[i].matrix.tolist()
     
     def log_bp(self, bp, error_output, model_weights, model_layers):
         ref = self.object[f'epoch-{self.epoch}'][f'batch-{self.batch}']
@@ -207,7 +204,7 @@ class Logger:
             print(f"access to {directory} not allowed")
             return
         time_str = time.strftime("%I-%M-%S_%p", time.localtime(time.time()))
-        path = f'{directory}/{"output_" + time_str if name is None else name}.txt'
+        path = f'{directory}/{"log_" + time_str if name is None else name}.txt'
         string = json.dumps(self.object)
         with open(path, 'w') as file:
             file.write(string)
