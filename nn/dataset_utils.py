@@ -2,20 +2,18 @@ import numpy as np
 from numpy.random import default_rng
 from math import sqrt
 
-def get_vector(seed = 12345, upper_bound = 10, n_samples = 10, zeros = False):
+def get_vector(seed = 1, upper_bound = 10, n_samples = 10):
     generator = default_rng(seed)
-    vector = None
-    if zeros:
-        vector = generator.integers(0, 1, size = (n_samples, 1))
-    else:
-        vector = generator.integers(1, upper_bound, (n_samples, 1))
+    vector = upper_bound * generator.random((n_samples, 1))  # refer docs; [(upper - lower) * rng.random() + lower] gives range[lower, upper)
     return vector
 
-def and_gate_dataset(seed = 1000, positive_samples = 100):
+def and_gate_dataset(positive_samples = 100, seed = 1000):
+    generator = default_rng(seed)
+    seeds = generator.choice(1000, 4, replace = False)
     # features
-    both_positive = np.hstack((get_vector(seed = 187, n_samples = positive_samples), get_vector(seed = 9, n_samples = positive_samples)))
-    one_zero_1 = np.hstack((get_vector(zeros = True, n_samples = positive_samples//2), get_vector(seed = 45, n_samples = positive_samples//2)))
-    one_zero_2 = np.hstack((get_vector(seed = 987, n_samples = positive_samples//2), get_vector(zeros = True, n_samples = positive_samples//2)))
+    both_positive = np.hstack((get_vector(seed = seeds[0], n_samples = positive_samples), get_vector(seed = seeds[1], n_samples = positive_samples)))
+    one_zero_1 = np.hstack((np.zeros((positive_samples//2, 1)), get_vector(seed = seeds[2], n_samples = positive_samples//2)))
+    one_zero_2 = np.hstack((get_vector(seed = seeds[3], n_samples = positive_samples//2), np.zeros((positive_samples//2, 1))))
     both_zero = np.array([0, 0])
     features = np.vstack((both_positive, one_zero_1, one_zero_2, both_zero))
 
@@ -25,8 +23,7 @@ def and_gate_dataset(seed = 1000, positive_samples = 100):
     labels = np.vstack((labels_positive, labels_negative))
 
     dataset = np.hstack((features, labels))
-    shuffler = default_rng(seed)
-    shuffler.shuffle(dataset)
+    generator.shuffle(dataset)
     return dataset
 
 def get_minibatch(features, targets, batch_size = 1, start_at = 0):

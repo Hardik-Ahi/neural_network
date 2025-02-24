@@ -5,10 +5,8 @@ import json, os, time
 
 class Trainer:
 
-    def __init__(self, model, optimizer, minibatch_size = None, learning_rate = 0.01):  # None means batch GD. for stochastic, specify '1'.
+    def __init__(self, model, optimizer):
         self.model = model
-        self.minibatch_size = minibatch_size
-        self.learning_rate = learning_rate
         self.optimizer = optimizer
         self.optimizer.set_model(self.model)
         self.logger = Logger()
@@ -54,11 +52,13 @@ class Trainer:
     def save_history(self, dir, name = None):
         self.logger.write_log(dir, name)
     
-    def train(self, features, targets, epochs = 1):
-        targets.reshape((targets.size,))
+    def train(self, features, targets, minibatch_size = None, learning_rate = 0.01, epochs = 1):
+        self.minibatch_size = minibatch_size  # None means batch GD. for stochastic, specify '1'.
+        self.learning_rate = learning_rate
         if self.minibatch_size is None:
             self.minibatch_size = features.shape[0]
 
+        targets.reshape((targets.size,))
         self.logger.log_init(self.model.weights, self.model.layers)
         for epoch in range(epochs):
             print(f"epoch-{epoch}:")
