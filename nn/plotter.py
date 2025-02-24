@@ -24,9 +24,9 @@ class Plotter:
         weights_gradients = dict()
         bias_gradients = dict()
 
-        for i in range(len(self.data)-1):  # -1 for excluding init()
+        for i in range(len(list(filter(lambda x: x.startswith('epoch'), self.data.keys())))):
             epoch = f'epoch-{i}'
-            for j in range(len(self.data[epoch])//2):  # each epoch has equal no.of batches, updates
+            for j in range(len(list(filter(lambda x: x.startswith('update'), self.data[epoch].keys())))):
                 update = f'update-{j}'
                 for w in range(self.n_layers-1):
                     weight = f'weights-gradient-{w}'
@@ -86,9 +86,9 @@ class Plotter:
                 bias[bias_name] = list()
             bias[bias_name].append(np.asarray(init['bias'][bias_name]))
 
-        for i in range(len(self.data)-1):
+        for i in range(len(list(filter(lambda x: x.startswith('epoch'), self.data.keys())))):
             epoch = f'epoch-{i}'
-            for j in range(len(self.data[epoch])//2):
+            for j in range(len(list(filter(lambda x: x.startswith('update'), self.data[epoch].keys())))):
                 update = f'update-{j}'
                 for w in range(self.n_layers-1):
                     weight = f'weights-{w}'
@@ -120,5 +120,40 @@ class Plotter:
         
         fig.savefig(dir + name, bbox_inches = "tight")
         print(f'plot saved at {dir + name}')
-        plt.show()  # awesome pop-up window when using vs code!
-                
+        plt.show()
+    
+    def plot_accuracy(self, dir, name = None):
+        if not os.access(dir, os.F_OK):
+            print(f'cannot access {dir}')
+            return
+        time_str = time.strftime("%I-%M-%S_%p", time.localtime(time.time()))
+        name = "/" + ("accuracy_" + time_str if name is None else name) + ".png"
+
+        accuracy_list = list()
+        loss_list = list()
+        confusion_matrix = {'tp': list(), 'tn': list(), 'fp': list(), 'fn': list()}
+
+        for i in range(len(list(filter(lambda x: x.startswith('epoch'), self.data.keys())))):
+            epoch = f'epoch-{i}'
+            accuracy_list.append(self.data[epoch]['accuracy'])
+            loss_list.append(self.data[epoch]['loss'])
+            matrix = self.data[epoch]['confusion-matrix']
+            for key in matrix.keys():
+                confusion_matrix[key].append(matrix[key])
+
+        fig, axs = plt.subplots(1, 2, figsize = (12, 4), gridspec_kw = {'wspace': 0.2, 'hspace': 0.3})
+        fig.suptitle("Training Metrics", size = 'xx-large')
+
+        axs[0].plot(loss_list, label = "Loss")
+        axs[0].plot(accuracy_list, label = "Accuracy")
+        axs[0].set_title("Loss & Accuracy")
+        axs[0].legend()
+
+        for key in confusion_matrix.keys():
+            axs[1].plot(confusion_matrix[key], label = key)
+        axs[1].set_title("Confusion Matrix")
+        axs[1].legend()
+
+        fig.savefig(dir + name, bbox_inches = "tight")
+        print(f'plot saved at {dir + name}')
+        plt.show()

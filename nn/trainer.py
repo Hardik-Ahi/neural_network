@@ -86,7 +86,7 @@ class Trainer:
                 self.optimizer.on_pass()
                 start_index += self.batch_size
                 batch += 1
-            self.predict(features, targets)
+            self.predict(features, targets, for_plot = True)
     
     def confusion_matrix(self, labels, predictions):
         predictions = predictions.reshape((predictions.size, 1))
@@ -114,7 +114,7 @@ class Trainer:
             total += i
         return (confusion_matrix['tp'] + confusion_matrix['tn']) / total
     
-    def predict(self, features, targets, output_predictions = False):
+    def predict(self, features, targets, output_predictions = False, for_plot = False):
         targets = targets.reshape((targets.size,))
         predictions = list()
 
@@ -128,7 +128,10 @@ class Trainer:
         predictions = round_off(predictions)
         score = self.accuracy(targets, predictions)
         print("Accuracy:", score)
-        print("Confusion matrix:", self.confusion_matrix(targets, round_off(predictions)))
+        matrix = self.confusion_matrix(targets, round_off(predictions))
+        print("Confusion matrix:", matrix)
+        if for_plot:
+            self.logger.log_accuracy(loss, score, matrix)
         if output_predictions:
             print("predictions:", predictions)
             print("targets:    ", targets)
@@ -198,6 +201,12 @@ class Logger:
             ref[f'weights-{i}'] = model_weights[i].matrix.tolist()
         for i in range(len(model_layers)):
             ref[f'bias-{i}'] = model_layers[i].b_.tolist()
+    
+    def log_accuracy(self, loss, accuracy, confusion_matrix):
+        ref = self.object[f'epoch-{self.epoch}']
+        ref['accuracy'] = accuracy
+        ref['loss'] = loss
+        ref['confusion-matrix'] = confusion_matrix
         
     def write_log(self, directory = "./logs", name = None):
         if not os.access(directory, os.F_OK):

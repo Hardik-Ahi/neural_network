@@ -14,10 +14,10 @@ model.compile()
 
 
 # showing that when output falls in negative part of relu, with leak = 0, no gradients are observed throughout training.
-model.weights[0].matrix = np.array([
+'''model.weights[0].matrix = np.array([
     [-0.1, -0.01],
     [-0.06, -0.04]
-])
+])'''
 
 train = and_gate_dataset(positive_samples = 100)
 # train = np.array([[0, 0, 0], [1, 1, 0], [0, 1, 1], [1, 0, 1]])  # all activations = sigmoid, reached 100% accuracy in 4000 epochs! (XOR problem solved)
@@ -58,3 +58,4 @@ plotter.set_model_layers(3)
 plotter.read_file(r'logs\test.txt')
 plotter.plot_gradients('./plots')
 plotter.plot_weights('./plots')
+plotter.plot_accuracy('./plots')

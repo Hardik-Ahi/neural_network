@@ -32,6 +32,12 @@ weights-n}
 {bias-n  // updated
 bias-n}
 update-n}
+{accuracy
+accuracy}
+{loss
+loss}
+{confusion-matrix
+confusion-matrix}
 epoch-n}
 
 in 1 epoch, n batches = n updates
