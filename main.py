@@ -28,7 +28,7 @@ model.show_weights()
 model.show_biases()
 
 #print(f"dataset:{train}")
-trainer.train(X_train, y_train, 1, 0.02, epochs = 1000)  # double YES!! got 100% accuracy in 250 epochs using leaky_relu with leak = 0.4!!
+trainer.train(X_train, y_train, 1, 0.02, 100, 30)  # double YES!! got 100% accuracy in 250 epochs using leaky_relu with leak = 0.4!!
 trainer.save_history("./logs", "test")
 
 test = and_gate_dataset(positive_samples = 100, seed = 2)  # this is some serious testing! gets 100% accuracy here!!!!
@@ -55,6 +55,6 @@ trainer.predict(X_test, y_test)
 plotter = Plotter()
 plotter.set_model_layers(3)
 plotter.read_file(r'logs\test.txt')
-plotter.plot_gradients('./plots')
-plotter.plot_weights('./plots')
-plotter.plot_accuracy('./plots')
+plotter.plot_gradients('./plots', n_points = 700)
+plotter.plot_weights('./plots', n_points = 700)
+plotter.plot_accuracy('./plots', n_points = 700)

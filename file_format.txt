@@ -7,7 +7,12 @@ weights-n}
 bias-n}
 init}
 
+{n-epochs  // total no.of epochs written to this file
+n-epochs}
+
 {epoch-n
+{n-batches
+n-batches}
 {batch-n  // mini-batch number
 {fp-n
 {activation-n  // activations (layer.a_), including input layer (=> data)
@@ -18,7 +23,7 @@ fp-n}
 err-output}
 {err-n  // layer.del_
 err-n}
-{current-gradient-n  // for weights; normalized by mini-batch size.
+{current-gradient-n  // for weights; normalized by mini-batch size => becomes larger as the back passes accumulate for 1 batch
 current-gradient-n}
 bp-n}
 batch-n}

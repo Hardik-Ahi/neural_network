@@ -28,8 +28,14 @@ class Plotter:
             return array
         array = np.vstack((array[:first], array[first::2]))
         return array
+
+    @staticmethod
+    def select_samples(array, limit):
+        if limit > array.shape[0]:
+            return array
+        return array[:limit]
     
-    def plot_gradients(self, dir, name = None, n_points = 500):
+    def plot_gradients(self, dir, name = None, n_points = None):
         if not os.access(dir, os.F_OK):
             print(f'cannot access {dir}')
             return
@@ -39,9 +45,9 @@ class Plotter:
         weights_gradients = dict()
         bias_gradients = dict()
 
-        for i in range(len(list(filter(lambda x: x.startswith('epoch'), self.data.keys())))):
+        for i in range(self.data['n-epochs']):
             epoch = f'epoch-{i}'
-            for j in range(len(list(filter(lambda x: x.startswith('update'), self.data[epoch].keys())))):
+            for j in range(self.data[epoch]['n-batches']):
                 update = f'update-{j}'
                 for w in range(self.n_layers-1):
                     weight = f'weights-gradient-{w}'
@@ -55,31 +61,38 @@ class Plotter:
                     bias_gradients[bias].append(np.asarray(self.data[epoch][update][bias]))
         
         fig, axs = plt.subplots(2, self.n_layers-1, figsize = (15, 8), gridspec_kw = {'wspace': 0.2, 'hspace': 0.3})
-        fig.suptitle(f'Applied Gradients', size = 'xx-large')
+        fig.suptitle(f'Gradients', size = 'xx-large')
+
         # weights
         for ax in range(self.n_layers-1):
             weight = f'weights-gradient-{ax}'
-            weights_gradients[weight] = Plotter.skip_samples(np.asarray(weights_gradients[weight]), n_points)  # convert entire history of gradients into one numpy array
+            weights_gradients[weight] = np.asarray(weights_gradients[weight])  # convert entire history of gradients into one numpy array
+            if n_points is not None:
+                weights_gradients[weight] = Plotter.select_samples(weights_gradients[weight], n_points)
             for r in range(weights_gradients[weight][0].shape[0]):
                 for c in range(weights_gradients[weight][0].shape[1]):
                     axs[0, ax].plot(weights_gradients[weight][:, r, c], label = f'[{r}, {c}]', linewidth = 0.7)
                     axs[0, ax].legend(title = 'elements')
                     axs[0, ax].set_title(f'weights-{ax}')
+                    axs[0, ax].set_xlabel("Updates")
         
         # bias
         for ax in range(1, self.n_layers):
             bias = f'bias-gradient-{ax}'
-            bias_gradients[bias] = Plotter.skip_samples(np.asarray(bias_gradients[bias]), n_points)
+            bias_gradients[bias] = np.asarray(bias_gradients[bias])
+            if n_points is not None:
+                bias_gradients[bias] = Plotter.select_samples(bias_gradients[bias], n_points)
             for r in range(bias_gradients[bias][0].shape[0]):
                     axs[1, ax-1].plot(bias_gradients[bias][:, r, 0], label = f'[{r}]', linewidth = 0.7)
                     axs[1, ax-1].legend(title = 'elements')
                     axs[1, ax-1].set_title(f'bias-{ax-1}')
+                    axs[1, ax-1].set_xlabel("Updates")
         
         fig.savefig(dir + name, bbox_inches = "tight")
         print(f'plot saved at {dir + name}')
         plt.show()  # awesome pop-up window when using vs code!
     
-    def plot_weights(self, dir, name = None, n_points = 500):
+    def plot_weights(self, dir, name = None, n_points = None):
         if not os.access(dir, os.F_OK):
             print(f'cannot access {dir}')
             return
@@ -101,9 +114,9 @@ class Plotter:
                 bias[bias_name] = list()
             bias[bias_name].append(np.asarray(init['bias'][bias_name]))
 
-        for i in range(len(list(filter(lambda x: x.startswith('epoch'), self.data.keys())))):
+        for i in range(self.data['n-epochs']):
             epoch = f'epoch-{i}'
-            for j in range(len(list(filter(lambda x: x.startswith('update'), self.data[epoch].keys())))):
+            for j in range(self.data[epoch]['n-batches']):
                 update = f'update-{j}'
                 for w in range(self.n_layers-1):
                     weight = f'weights-{w}'
@@ -113,31 +126,37 @@ class Plotter:
                     bias[bias_name].append(np.asarray(self.data[epoch][update][bias_name]))
         
         fig, axs = plt.subplots(2, self.n_layers-1, figsize = (15, 8), gridspec_kw = {'wspace': 0.2, 'hspace': 0.3})
-        fig.suptitle("Weights & Biases", size = 'xx-large')
+        fig.suptitle("Weights & Bias Values", size = 'xx-large')
         # weights
         for ax in range(self.n_layers-1):
             weight = f'weights-{ax}'
-            weights[weight] = Plotter.skip_samples(np.asarray(weights[weight]), n_points)
+            weights[weight] = np.asarray(weights[weight])
+            if n_points is not None:
+                weights[weight] = Plotter.select_samples(weights[weight], n_points)
             for r in range(weights[weight][0].shape[0]):
                 for c in range(weights[weight][0].shape[1]):
                     axs[0, ax].plot(weights[weight][:, r, c], label = f'[{r}, {c}]', linewidth = 0.7)
                     axs[0, ax].legend(title = 'elements')
                     axs[0, ax].set_title(f'weights-{ax}')
+                    axs[0, ax].set_xlabel("Updates")
         
         # bias
         for ax in range(1, self.n_layers):
             bias_name = f'bias-{ax}'
-            bias[bias_name] = Plotter.skip_samples(np.asarray(bias[bias_name]), n_points)
+            bias[bias_name] = np.asarray(bias[bias_name])
+            if n_points is not None:
+                bias[bias_name] = Plotter.select_samples(bias[bias_name], n_points)
             for r in range(bias[bias_name][0].shape[0]):
                     axs[1, ax-1].plot(bias[bias_name][:, r, 0], label = f'[{r}]', linewidth = 0.7)
                     axs[1, ax-1].legend(title = 'elements')
                     axs[1, ax-1].set_title(f'bias-{ax-1}')
+                    axs[1, ax-1].set_xlabel("Updates")
         
         fig.savefig(dir + name, bbox_inches = "tight")
         print(f'plot saved at {dir + name}')
         plt.show()
     
-    def plot_accuracy(self, dir, name = None, n_points = 500):
+    def plot_accuracy(self, dir, name = None, n_points = None):
         if not os.access(dir, os.F_OK):
             print(f'cannot access {dir}')
             return
@@ -148,7 +167,7 @@ class Plotter:
         loss_list = list()
         confusion_matrix = {'tp': list(), 'tn': list(), 'fp': list(), 'fn': list()}
 
-        for i in range(len(list(filter(lambda x: x.startswith('epoch'), self.data.keys())))):
+        for i in range(self.data['n-epochs']):
             epoch = f'epoch-{i}'
             accuracy_list.append(self.data[epoch]['accuracy'])
             loss_list.append(self.data[epoch]['loss'])
@@ -157,15 +176,25 @@ class Plotter:
                 confusion_matrix[key].append(matrix[key])
 
         fig, axs = plt.subplots(1, 2, figsize = (15, 5), gridspec_kw = {'wspace': 0.2, 'hspace': 0.3})
-        fig.suptitle("Training Metrics", size = 'xx-large')
+        fig.suptitle(f"Metrics", size = 'xx-large')
 
-        axs[0].plot(Plotter.skip_samples(np.asarray(loss_list), n_points), label = "Loss")
-        axs[0].plot(Plotter.skip_samples(np.asarray(accuracy_list), n_points), label = "Accuracy")
+        loss_list = np.asarray(loss_list)
+        accuracy_list = np.asarray(accuracy_list)
+        if n_points is not None:
+                loss_list = Plotter.select_samples(loss_list, n_points)
+                accuracy_list = Plotter.select_samples(accuracy_list, n_points)
+        axs[0].plot(loss_list, label = "Loss")
+        axs[0].plot(accuracy_list, label = "Accuracy")
+        axs[0].set_xlabel("Epochs")
         axs[0].set_title("Loss & Accuracy")
         axs[0].legend()
 
         for key in confusion_matrix.keys():
-            axs[1].plot(Plotter.skip_samples(np.asarray(confusion_matrix[key]), n_points), label = key)
+            confusion_matrix[key] = np.asarray(confusion_matrix[key])
+            if n_points is not None:
+                confusion_matrix[key] = Plotter.select_samples(confusion_matrix[key], n_points)
+            axs[1].plot(confusion_matrix[key], label = key)
+        axs[1].set_xlabel("Epochs")
         axs[1].set_title("Confusion Matrix")
         axs[1].legend()
 

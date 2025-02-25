@@ -52,13 +52,16 @@ class Trainer:
     def save_history(self, dir, name = None):
         self.logger.write_log(dir, name)
     
-    def train(self, features, targets, minibatch_size = None, learning_rate = 0.01, epochs = 1):
-        self.minibatch_size = minibatch_size  # None means batch GD. for stochastic, specify '1'.
+    def train(self, features, targets, batch_size = None, learning_rate = 0.01, epochs = 1, log_epochs = None):
+        self.minibatch_size = batch_size  # None means batch GD. for stochastic, specify '1'.
         self.learning_rate = learning_rate
         if self.minibatch_size is None:
             self.minibatch_size = features.shape[0]
+        if log_epochs is None:
+            log_epochs = epochs
 
         targets.reshape((targets.size,))
+        self.logger.set_limit(log_epochs)
         self.logger.log_init(self.model.weights, self.model.layers)
         for epoch in range(epochs):
             print(f"epoch-{epoch}:")
@@ -69,10 +72,10 @@ class Trainer:
                 self.logger.log_batch(batch)
                 real_features, real_targets = get_minibatch(features, targets, self.minibatch_size, start_index)
                 real_targets = real_targets.reshape((real_targets.size,))
-                self.batch_size = real_features.shape[0]  # giving this minibatch_size to BatchTrainer's error_computing functions
+                self.batch_size = real_features.shape[0]  # real batch size for correctly normalizing gradients for accumulation
                 for i in range(real_features.shape[0]):
                     self.forward_pass(real_features[i])
-                    self.logger.log_fp(i, self.model.weights, self.model.layers)
+                    self.logger.log_fp(i, self.model.layers)
                     self.backward_pass(real_targets[i])
                     self.logger.log_bp(i, self.model.layers[-1].del_, self.model.weights, self.model.layers)
 
@@ -86,6 +89,7 @@ class Trainer:
                 self.optimizer.on_pass()
                 start_index += self.batch_size
                 batch += 1
+            self.logger.log_n_batches()
             self.predict(features, targets, for_plot = True)
     
     def confusion_matrix(self, labels, predictions):
@@ -145,6 +149,10 @@ class Logger:
         self.bp = 0
         self.update = 0
     
+    def set_limit(self, limit):
+        self.limit = limit-1
+        self.stop = False
+    
     def log_init(self, model_weights, model_layers):
         self.object['init'] = dict()
         dict_ = self.object['init']
@@ -157,14 +165,26 @@ class Logger:
             dict_['bias'][f'bias-{i}'] = model_layers[i].b_.tolist()
     
     def log_epoch(self, epoch):
-        self.object[f'epoch-{epoch}'] = dict()
+        if epoch > self.limit:
+            self.stop = True
+            return
         self.epoch = epoch
+        self.object[f'epoch-{epoch}'] = dict()
     
     def log_batch(self, batch):
+        if self.stop:
+            return
         self.object[f'epoch-{self.epoch}'][f'batch-{batch}'] = dict()
         self.batch = batch
     
-    def log_fp(self, fp, model_weights, model_layers):
+    def log_n_batches(self):
+        if self.stop:
+            return
+        self.object[f'epoch-{self.epoch}']['n-batches'] = self.batch+1
+    
+    def log_fp(self, fp, model_layers):
+        if self.stop:
+            return
         ref = self.object[f'epoch-{self.epoch}'][f'batch-{self.batch}']
         ref[f'fp-{fp}'] = dict()
         self.fp = fp
@@ -173,6 +193,8 @@ class Logger:
             ref[f'fp-{fp}'][f'activation-{i}'] = model_layers[i].a_.tolist()
     
     def log_bp(self, bp, error_output, model_weights, model_layers):
+        if self.stop:
+            return
         ref = self.object[f'epoch-{self.epoch}'][f'batch-{self.batch}']
         ref[f'bp-{bp}'] = dict()
         self.bp = bp
@@ -184,17 +206,25 @@ class Logger:
             ref[f'bp-{bp}'][f'current-gradient-{i}'] = model_weights[i].gradients.tolist()
     
     def log_updates_init(self, update):
+        if self.stop:
+            return
         ref = self.object[f'epoch-{self.epoch}']
         ref[f'update-{update}'] = dict()
         self.update = update
 
     def log_update_weights(self, index, weights_gradient):
+        if self.stop:
+            return
         self.object[f'epoch-{self.epoch}'][f'update-{self.update}'][f'weights-gradient-{index}'] = weights_gradient.tolist()
     
     def log_update_bias(self, index, bias_gradient):
+        if self.stop:
+            return
         self.object[f'epoch-{self.epoch}'][f'update-{self.update}'][f'bias-gradient-{index}'] = bias_gradient.tolist()
     
     def log_updates_finish(self, model_weights, model_layers):
+        if self.stop:
+            return
         ref = self.object[f'epoch-{self.epoch}'][f'update-{self.update}']
 
         for i in range(len(model_weights)):
@@ -203,6 +233,8 @@ class Logger:
             ref[f'bias-{i}'] = model_layers[i].b_.tolist()
     
     def log_accuracy(self, loss, accuracy, confusion_matrix):
+        if self.stop:
+            return
         ref = self.object[f'epoch-{self.epoch}']
         ref['accuracy'] = accuracy
         ref['loss'] = loss
@@ -214,6 +246,8 @@ class Logger:
             return
         time_str = time.strftime("%I-%M-%S_%p", time.localtime(time.time()))
         path = f'{directory}/{"log_" + time_str if name is None else name}.txt'
+
+        self.object['n-epochs'] = self.epoch+1  # actual epochs = 0-indexed, this value = len() of that => 1-indexed 'count' of epochs
         string = json.dumps(self.object)
         with open(path, 'w') as file:
             file.write(string)
