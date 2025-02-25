@@ -12,7 +12,6 @@ model.add_layer(Layer(2, leaky_relu(), der_leaky_relu()))
 model.add_layer(Layer(1, sigmoid, der_sigmoid))
 model.compile()
 
-
 # showing that when output falls in negative part of relu, with leak = 0, no gradients are observed throughout training.
 '''model.weights[0].matrix = np.array([
     [-0.1, -0.01],
@@ -29,7 +28,7 @@ model.show_weights()
 model.show_biases()
 
 #print(f"dataset:{train}")
-trainer.train(X_train, y_train, 1, 0.025, epochs = 300)  # double YES!! got 100% accuracy in 250 epochs using leaky_relu with leak = 0.4!!
+trainer.train(X_train, y_train, 1, 0.02, epochs = 1000)  # double YES!! got 100% accuracy in 250 epochs using leaky_relu with leak = 0.4!!
 trainer.save_history("./logs", "test")
 
 test = and_gate_dataset(positive_samples = 100, seed = 2)  # this is some serious testing! gets 100% accuracy here!!!!

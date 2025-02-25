@@ -14,7 +14,22 @@ class Plotter:
     def set_model_layers(self, n_layers):
         self.n_layers = n_layers
     
-    def plot_gradients(self, dir, name = None):
+    @staticmethod
+    def skip_samples(array, limit):
+        # can discard a few points from the end of the array
+        has = array.shape[0]
+        initial_skip = has // limit
+        if initial_skip == 0:
+            return array
+        array = array[::initial_skip]
+
+        first = array.shape[0] - 2 * (array.shape[0] - limit)
+        if first == array.shape[0]:
+            return array
+        array = np.vstack((array[:first], array[first::2]))
+        return array
+    
+    def plot_gradients(self, dir, name = None, n_points = 500):
         if not os.access(dir, os.F_OK):
             print(f'cannot access {dir}')
             return
@@ -39,24 +54,24 @@ class Plotter:
                         bias_gradients[bias] = list()
                     bias_gradients[bias].append(np.asarray(self.data[epoch][update][bias]))
         
-        fig, axs = plt.subplots(2, self.n_layers-1, figsize = (12, 7), gridspec_kw = {'wspace': 0.2, 'hspace': 0.3})
+        fig, axs = plt.subplots(2, self.n_layers-1, figsize = (15, 8), gridspec_kw = {'wspace': 0.2, 'hspace': 0.3})
         fig.suptitle(f'Applied Gradients', size = 'xx-large')
         # weights
         for ax in range(self.n_layers-1):
             weight = f'weights-gradient-{ax}'
-            weights_gradients[weight] = np.asarray(weights_gradients[weight])  # convert entire history of gradients into one numpy array
+            weights_gradients[weight] = Plotter.skip_samples(np.asarray(weights_gradients[weight]), n_points)  # convert entire history of gradients into one numpy array
             for r in range(weights_gradients[weight][0].shape[0]):
                 for c in range(weights_gradients[weight][0].shape[1]):
-                    axs[0, ax].plot(weights_gradients[weight][:, r, c], label = f'[{r}, {c}]')
+                    axs[0, ax].plot(weights_gradients[weight][:, r, c], label = f'[{r}, {c}]', linewidth = 0.7)
                     axs[0, ax].legend(title = 'elements')
                     axs[0, ax].set_title(f'weights-{ax}')
         
         # bias
         for ax in range(1, self.n_layers):
             bias = f'bias-gradient-{ax}'
-            bias_gradients[bias] = np.asarray(bias_gradients[bias])
+            bias_gradients[bias] = Plotter.skip_samples(np.asarray(bias_gradients[bias]), n_points)
             for r in range(bias_gradients[bias][0].shape[0]):
-                    axs[1, ax-1].plot(bias_gradients[bias][:, r, 0], label = f'[{r}]')
+                    axs[1, ax-1].plot(bias_gradients[bias][:, r, 0], label = f'[{r}]', linewidth = 0.7)
                     axs[1, ax-1].legend(title = 'elements')
                     axs[1, ax-1].set_title(f'bias-{ax-1}')
         
@@ -64,7 +79,7 @@ class Plotter:
         print(f'plot saved at {dir + name}')
         plt.show()  # awesome pop-up window when using vs code!
     
-    def plot_weights(self, dir, name = None):
+    def plot_weights(self, dir, name = None, n_points = 500):
         if not os.access(dir, os.F_OK):
             print(f'cannot access {dir}')
             return
@@ -97,24 +112,24 @@ class Plotter:
                     bias_name = f'bias-{b}'
                     bias[bias_name].append(np.asarray(self.data[epoch][update][bias_name]))
         
-        fig, axs = plt.subplots(2, self.n_layers-1, figsize = (12, 7), gridspec_kw = {'wspace': 0.2, 'hspace': 0.3})
+        fig, axs = plt.subplots(2, self.n_layers-1, figsize = (15, 8), gridspec_kw = {'wspace': 0.2, 'hspace': 0.3})
         fig.suptitle("Weights & Biases", size = 'xx-large')
         # weights
         for ax in range(self.n_layers-1):
             weight = f'weights-{ax}'
-            weights[weight] = np.asarray(weights[weight])
+            weights[weight] = Plotter.skip_samples(np.asarray(weights[weight]), n_points)
             for r in range(weights[weight][0].shape[0]):
                 for c in range(weights[weight][0].shape[1]):
-                    axs[0, ax].plot(weights[weight][:, r, c], label = f'[{r}, {c}]')
+                    axs[0, ax].plot(weights[weight][:, r, c], label = f'[{r}, {c}]', linewidth = 0.7)
                     axs[0, ax].legend(title = 'elements')
                     axs[0, ax].set_title(f'weights-{ax}')
         
         # bias
         for ax in range(1, self.n_layers):
             bias_name = f'bias-{ax}'
-            bias[bias_name] = np.asarray(bias[bias_name])
+            bias[bias_name] = Plotter.skip_samples(np.asarray(bias[bias_name]), n_points)
             for r in range(bias[bias_name][0].shape[0]):
-                    axs[1, ax-1].plot(bias[bias_name][:, r, 0], label = f'[{r}]')
+                    axs[1, ax-1].plot(bias[bias_name][:, r, 0], label = f'[{r}]', linewidth = 0.7)
                     axs[1, ax-1].legend(title = 'elements')
                     axs[1, ax-1].set_title(f'bias-{ax-1}')
         
@@ -122,7 +137,7 @@ class Plotter:
         print(f'plot saved at {dir + name}')
         plt.show()
     
-    def plot_accuracy(self, dir, name = None):
+    def plot_accuracy(self, dir, name = None, n_points = 500):
         if not os.access(dir, os.F_OK):
             print(f'cannot access {dir}')
             return
@@ -141,16 +156,16 @@ class Plotter:
             for key in matrix.keys():
                 confusion_matrix[key].append(matrix[key])
 
-        fig, axs = plt.subplots(1, 2, figsize = (12, 4), gridspec_kw = {'wspace': 0.2, 'hspace': 0.3})
+        fig, axs = plt.subplots(1, 2, figsize = (15, 5), gridspec_kw = {'wspace': 0.2, 'hspace': 0.3})
         fig.suptitle("Training Metrics", size = 'xx-large')
 
-        axs[0].plot(loss_list, label = "Loss")
-        axs[0].plot(accuracy_list, label = "Accuracy")
+        axs[0].plot(Plotter.skip_samples(np.asarray(loss_list), n_points), label = "Loss")
+        axs[0].plot(Plotter.skip_samples(np.asarray(accuracy_list), n_points), label = "Accuracy")
         axs[0].set_title("Loss & Accuracy")
         axs[0].legend()
 
         for key in confusion_matrix.keys():
-            axs[1].plot(confusion_matrix[key], label = key)
+            axs[1].plot(Plotter.skip_samples(np.asarray(confusion_matrix[key]), n_points), label = key)
         axs[1].set_title("Confusion Matrix")
         axs[1].legend()
 
