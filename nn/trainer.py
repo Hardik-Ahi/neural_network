@@ -137,12 +137,19 @@ class Trainer:
         if for_plot:
             self.logger.log_accuracy(loss, score, matrix)
         if output_incorrect:
+            exists = False
             for i in range(targets.size):
                 if targets[i] != predictions[i]:
+                    if exists == False:
+                        exists = True
+                        print("incorrect predictions:")
                     print(f'input = {features[i]}, label = {targets[i]}, prediction = {predictions[i]}')
 
 class Logger:
     def __init__(self):
+        self.reset()
+
+    def reset(self):
         self.object = dict()
         self.epoch = 0
         self.batch = 0
@@ -254,7 +261,7 @@ class Logger:
             file.write(string)
 
         print(f'output written to {path}')
-        self.object = dict()
+        self.reset()
     
     @staticmethod
     def load_data(path):

@@ -18,10 +18,9 @@ model.compile()
     [-0.06, -0.04]
 ])'''
 
-train = and_gate_dataset(positive_samples = 100, seed = 1)
+X_train, y_train = and_gate_dataset(positive_samples = 100, seed = 1)
 # train = np.array([[0, 0, 0], [1, 1, 0], [0, 1, 1], [1, 0, 1]])  # all activations = sigmoid, reached 100% accuracy in 4000 epochs! (XOR problem solved)
-X_train = train[:, [0, 1]]
-y_train = train[:, 2].reshape((train.shape[0], 1))
+
 
 trainer = Trainer(model, SGD())  # YES! got 100% accuracy in 1500 epochs using sigmoid activation function all-around!
 model.show_weights()
@@ -31,9 +30,7 @@ model.show_biases()
 trainer.train(X_train, y_train, 1, 0.02, 100, 30)  # double YES!! got 100% accuracy in 250 epochs using leaky_relu with leak = 0.4!!
 #trainer.save_history("./logs", "test")
 
-test = and_gate_dataset(positive_samples = 100, seed = 2)  # this is some serious testing! gets 100% accuracy here!!!!
-X_test = test[:, [0, 1]]
-y_test = test[:, 2]
+X_test, y_test = and_gate_dataset(positive_samples = 100, seed = 2)  # this is some serious testing! gets 100% accuracy here!!!!
 
 # load weights
 '''model.load_weights('./models/test.npz')

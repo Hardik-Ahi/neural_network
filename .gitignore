@@ -3,3 +3,4 @@ __pycache__/
 /plots/
 *.ipynb
 .ipynb_checkpoints/
+/models/

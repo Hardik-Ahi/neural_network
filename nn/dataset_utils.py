@@ -24,7 +24,7 @@ def and_gate_dataset(positive_samples = 100, seed = 1000):
 
     dataset = np.hstack((features, labels))
     generator.shuffle(dataset)
-    return dataset
+    return dataset[:, [0, 1]], dataset[:, [2]]
 
 def get_minibatch(features, targets, batch_size = 1, start_at = 0):
     # give this the same stuff every time

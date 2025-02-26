@@ -13,10 +13,10 @@ class Layer:
         self.del_ = np.zeros((n_neurons, 1))
         self.b_gradients = np.zeros((n_neurons, 1))
         self.a_ = np.zeros((n_neurons, 1))
-        self.b_ = self.init_biases()
+        self.b_ = np.zeros((n_neurons, 1))
     
     def init_biases(self):
-        return np.zeros((self.n_neurons, 1))
+        self.b_ = np.zeros((self.n_neurons, 1))
 
 class Weights:
 
@@ -54,8 +54,12 @@ class Model:
         generator = default_rng(seed = self.seed)
         seeds = generator.integers(0, len(self.layers)*100, (len(self.layers)-1,))
 
+        self.weights = list()  # allows re-compilation
         for i in range(len(self.layers)-1):
             self.weights.append(Weights(self.layers[i], self.layers[i+1], seed = seeds[i]))
+        
+        for layer in self.layers:
+            layer.init_biases()
     
     def show_weights(self):
         for i in range(len(self.weights)):
