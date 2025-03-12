@@ -57,3 +57,11 @@ def standardize_data(features):
         else:
             result = np.hstack((result, make_standard(column, mean, std).reshape((column.shape[0], 1))))
     return result
+
+def linear_regression_dataset(samples = 200, x_start = 0, x_end = 100, slope = 1, intercept = 5, sigma_ = 8, seed = 7):
+    x = np.linspace(x_start, x_end, samples)
+
+    y = slope * x + intercept
+    y += default_rng(seed).normal(0, sigma_, samples)
+
+    return x, y

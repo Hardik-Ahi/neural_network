@@ -201,3 +201,14 @@ class Plotter:
         fig.savefig(dir + name, bbox_inches = "tight")
         print(f'plot saved at {dir + name}')
         plt.show()
+    
+    @staticmethod
+    def plot_points(x, y):
+        fig, ax = plt.subplots(figsize = (7, 5))
+        fig.suptitle(f"Points", size = 'xx-large')
+
+        ax.scatter(x, y)
+        ax.set_xlabel("X")
+        ax.set_ylabel("Y")
+
+        plt.show()
