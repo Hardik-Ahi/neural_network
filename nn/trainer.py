@@ -118,7 +118,7 @@ class Trainer:
             total += i
         return (confusion_matrix['tp'] + confusion_matrix['tn']) / total
     
-    def predict(self, features, targets, output_incorrect = False, for_plot = False):
+    def predict(self, features, targets, output_incorrect = False, for_plot = False, quiet = False):
         targets = targets.reshape((targets.size,))
         predictions = list()
 
@@ -128,14 +128,18 @@ class Trainer:
         
         predictions = np.asarray(predictions)
         loss = self.model.loss_function(targets, predictions.reshape((predictions.size,)))
-        print("Loss:", loss)
         predictions = round_off(predictions)
         score = self.accuracy(targets, predictions)
-        print("Accuracy:", score)
         matrix = self.confusion_matrix(targets, round_off(predictions))
-        print("Confusion matrix:", matrix)
+
+        if not quiet:
+            print("Loss:", loss)
+            print("Accuracy:", score)
+            print("Confusion matrix:", matrix)
+
         if for_plot:
             self.logger.log_accuracy(loss, score, matrix)
+            
         if output_incorrect:
             exists = False
             for i in range(targets.size):
@@ -144,6 +148,8 @@ class Trainer:
                         exists = True
                         print("incorrect predictions:")
                     print(f'input = {features[i]}, label = {targets[i]}, prediction = {predictions[i]}')
+        
+        return loss, score
 
 class Logger:
     def __init__(self):

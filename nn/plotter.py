@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.random import default_rng
 import matplotlib.pyplot as plt
 from nn.trainer import Logger
 import os, time
@@ -40,7 +41,7 @@ class Plotter:
             print(f'cannot access {dir}')
             return
         time_str = time.strftime("%I-%M-%S_%p", time.localtime(time.time()))
-        name = "/" + ("gradients_" + time_str if name is None else name) + ".png"
+        name = "/" + ("gradients_" + (time_str if name is None else name)) + ".png"
 
         weights_gradients = dict()
         bias_gradients = dict()
@@ -97,7 +98,7 @@ class Plotter:
             print(f'cannot access {dir}')
             return
         time_str = time.strftime("%I-%M-%S_%p", time.localtime(time.time()))
-        name = "/" + ("weights_" + time_str if name is None else name) + ".png"
+        name = "/" + ("weights_" + (time_str if name is None else name)) + ".png"
 
         weights = dict()
         bias = dict()
@@ -161,7 +162,7 @@ class Plotter:
             print(f'cannot access {dir}')
             return
         time_str = time.strftime("%I-%M-%S_%p", time.localtime(time.time()))
-        name = "/" + ("accuracy_" + time_str if name is None else name) + ".png"
+        name = "/" + ("accuracy_" + (time_str if name is None else name)) + ".png"
 
         accuracy_list = list()
         loss_list = list()
@@ -211,4 +212,44 @@ class Plotter:
         ax.set_xlabel("X")
         ax.set_ylabel("Y")
 
+        plt.show()
+    
+    def plot_contours(self, trainer, features, targets, dir, name = None, seed = 91):
+        if not os.access(dir, os.F_OK):
+            print(f'cannot access {dir}')
+            return
+        time_str = time.strftime("%I-%M-%S_%p", time.localtime(time.time()))
+        name = "/" + ("landscape_" + (time_str if name is None else name)) + ".png"
+
+        model = trainer.model
+        original_vector = model.weights_elements()
+
+        seeds = default_rng(seed).choice(1000, (4, 2), replace = False)
+        fig, axs = plt.subplots(2, 2, figsize = (12, 8), gridspec_kw = {'wspace': 0.2, 'hspace': 0.3})
+        fig.suptitle("Loss Landscape", size = "xx-large")
+
+        x = np.linspace(-1, 1, 20)
+        y = np.linspace(-1, 1, 20)
+        z = np.zeros((y.size, x.size))  # as per matplotlib's contour plot signature
+
+        for ax in range(4):
+            vector1 = default_rng(seeds[ax][0]).uniform(-1, 1, size = original_vector.shape)
+            vector1 = (vector1 / np.linalg.norm(vector1)) * np.linalg.norm(original_vector)
+            vector2 = default_rng(seeds[ax][1]).uniform(-1, 1, size = original_vector.shape)
+            vector2 = (vector2 / np.linalg.norm(vector2)) * np.linalg.norm(original_vector)
+
+            for i in range(y.size):  # y first
+                for j in range(x.size):
+                    model.set_weights(original_vector + y[i] * vector1 + x[j] * vector2)
+                    loss, _ = trainer.predict(features, targets, quiet = True)
+                    z[i, j] = loss
+            
+            axis = axs[ax//2][ax%2]
+            contour_set = axis.contour(x, y, z, levels = 15, cmap = "magma")
+            axis.clabel(contour_set)
+            axis.scatter(0, 0, c = "blue")
+        
+        model.set_weights(original_vector)
+        fig.savefig(dir + name, bbox_inches = "tight")
+        print(f'plot saved at {dir + name}')
         plt.show()

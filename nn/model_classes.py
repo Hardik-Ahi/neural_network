@@ -29,11 +29,11 @@ class Weights:
         self.matrix = self.init_weights(self.rows, self.cols, self.seed)
         self.gradients = np.zeros((self.rows, self.cols))
     
-    def init_weights(self, destination_neurons, source_neurons, seed):  # destination_neurons = fan_in to this layer = fan_out of previous layer
+    def init_weights(self, destination_neurons, source_neurons, seed):  # source_neurons = fan_in to this layer
         std = sqrt(2 / source_neurons)  # standard deviation for 'He' initialization (use it if you use ReLU functions)
         generator = default_rng(seed)
 
-        weights = generator.standard_normal((destination_neurons, source_neurons)) * std  # z = x-mu / sigma, therefore x = z . sigma + mu; z = standard normal
+        weights = generator.standard_normal((destination_neurons, source_neurons)) * std  # z = x-mu / sigma, therefore x = z * sigma + mu; z = standard normal
         # here we need mu (mean) = 0, but standard deviation as per we calculated using fan_in.
         return weights
 
@@ -60,6 +60,26 @@ class Model:
         
         for layer in self.layers:
             layer.init_biases()
+    
+    def weights_elements(self):
+        vector = list()
+
+        for weight in self.weights:
+            vector.append(np.ravel(weight.matrix))
+        for layer in self.layers:
+            vector.append(np.ravel(layer.b_))
+        
+        return np.hstack(vector)
+
+    def set_weights(self, vector):
+        start = 0
+
+        for weight in self.weights:
+            weight.matrix = vector[start : start + weight.matrix.size].reshape(weight.matrix.shape)
+            start += weight.matrix.size
+        for layer in self.layers:
+            layer.b_ = vector[start : start + layer.b_.size].reshape(layer.b_.shape)
+            start += layer.b_.size
     
     def show_weights(self):
         for i in range(len(self.weights)):
