@@ -35,31 +35,43 @@ class Plotter:
         if limit > array.shape[0]:
             return array
         return array[:limit]
-    
-    def plot_gradients(self, dir, name = None, n_points = None):
+
+    def get_valid_name(self, dir, name):
         if not os.access(dir, os.F_OK):
             print(f'cannot access {dir}')
-            return
-        time_str = time.strftime("%I-%M-%S_%p", time.localtime(time.time()))
-        name = "/" + ("gradients_" + (time_str if name is None else name)) + ".png"
-
-        weights_gradients = dict()
-        bias_gradients = dict()
+            return None
+        if name is not None:
+            return name
+        return time.strftime("%I-%M-%S_%p", time.localtime(time.time()))
+    
+    def read_array_dict(self, weight_string, bias_string):
+        weights_dict = dict()
+        bias_dict = dict()
 
         for i in range(self.data['n-epochs']):
             epoch = f'epoch-{i}'
             for j in range(self.data[epoch]['n-batches']):
                 update = f'update-{j}'
                 for w in range(self.n_layers-1):
-                    weight = f'weights-gradient-{w}'
-                    if weight not in weights_gradients:
-                        weights_gradients[weight] = list()
-                    weights_gradients[weight].append(np.asarray(self.data[epoch][update][weight]))
+                    weight = weight_string + str(w)
+                    if weight not in weights_dict:
+                        weights_dict[weight] = list()
+                    weights_dict[weight].append(np.asarray(self.data[epoch][update][weight]))
                 for b in range(1, self.n_layers):
-                    bias = f'bias-gradient-{b}'
-                    if bias not in bias_gradients:
-                        bias_gradients[bias] = list()
-                    bias_gradients[bias].append(np.asarray(self.data[epoch][update][bias]))
+                    bias = bias_string + str(b)
+                    if bias not in bias_dict:
+                        bias_dict[bias] = list()
+                    bias_dict[bias].append(np.asarray(self.data[epoch][update][bias]))
+        
+        return weights_dict, bias_dict
+    
+    def plot_gradients(self, dir, name = None, n_points = None):
+        filename = self.get_valid_name(dir, name)
+        if filename is None:
+            return
+        name = "/gradients_" + filename + ".png"
+
+        weights_gradients, bias_gradients = self.read_array_dict("weights-gradient-", "bias-gradient-")
         
         fig, axs = plt.subplots(2, self.n_layers-1, figsize = (15, 8), gridspec_kw = {'wspace': 0.2, 'hspace': 0.3})
         fig.suptitle(f'Gradients', size = 'xx-large')
@@ -94,37 +106,21 @@ class Plotter:
         plt.show()  # awesome pop-up window when using vs code!
     
     def plot_weights(self, dir, name = None, n_points = None):
-        if not os.access(dir, os.F_OK):
-            print(f'cannot access {dir}')
+        filename = self.get_valid_name(dir, name)
+        if filename is None:
             return
-        time_str = time.strftime("%I-%M-%S_%p", time.localtime(time.time()))
-        name = "/" + ("weights_" + (time_str if name is None else name)) + ".png"
+        name = "/weights_" + filename + ".png"
 
-        weights = dict()
-        bias = dict()
+        weights, bias = self.read_array_dict("weights-", "bias-")
 
         init = self.data['init']
         for i in range(self.n_layers-1):
             weight = f'weights-{i}'
-            if weight not in weights:
-                weights[weight] = list()
-            weights[weight].append(np.asarray(init['weights'][weight]))
+            weights[weight].insert(0, np.asarray(init['weights'][weight]))
         for i in range(1, self.n_layers):
             bias_name = f'bias-{i}'
-            if bias_name not in bias:
-                bias[bias_name] = list()
-            bias[bias_name].append(np.asarray(init['bias'][bias_name]))
+            bias[bias_name].insert(0, np.asarray(init['bias'][bias_name]))
 
-        for i in range(self.data['n-epochs']):
-            epoch = f'epoch-{i}'
-            for j in range(self.data[epoch]['n-batches']):
-                update = f'update-{j}'
-                for w in range(self.n_layers-1):
-                    weight = f'weights-{w}'
-                    weights[weight].append(np.asarray(self.data[epoch][update][weight]))
-                for b in range(1, self.n_layers):
-                    bias_name = f'bias-{b}'
-                    bias[bias_name].append(np.asarray(self.data[epoch][update][bias_name]))
         
         fig, axs = plt.subplots(2, self.n_layers-1, figsize = (15, 8), gridspec_kw = {'wspace': 0.2, 'hspace': 0.3})
         fig.suptitle("Weights & Bias Values", size = 'xx-large')
@@ -158,11 +154,10 @@ class Plotter:
         plt.show()
     
     def plot_accuracy(self, dir, name = None, n_points = None):
-        if not os.access(dir, os.F_OK):
-            print(f'cannot access {dir}')
+        filename = self.get_valid_name(dir, name)
+        if filename is None:
             return
-        time_str = time.strftime("%I-%M-%S_%p", time.localtime(time.time()))
-        name = "/" + ("accuracy_" + (time_str if name is None else name)) + ".png"
+        name = "/accuracy_" + filename + ".png"
 
         accuracy_list = list()
         loss_list = list()
@@ -215,11 +210,10 @@ class Plotter:
         plt.show()
     
     def plot_contours(self, trainer, features, targets, dir, name = None, seed = 91):
-        if not os.access(dir, os.F_OK):
-            print(f'cannot access {dir}')
+        filename = self.get_valid_name(dir, name)
+        if filename is None:
             return
-        time_str = time.strftime("%I-%M-%S_%p", time.localtime(time.time()))
-        name = "/" + ("landscape_" + (time_str if name is None else name)) + ".png"
+        name = "/contours_" + filename + ".png"
 
         model = trainer.model
         original_vector = model.weights_elements()
