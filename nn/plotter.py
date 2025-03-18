@@ -47,7 +47,7 @@ class Plotter:
 
         for i in range(self.data['n-epochs']):
             epoch = f'epoch-{i}'
-            for j in range(self.data[epoch]['n-batches']):
+            for j in range(self.data[epoch]['n-updates']):
                 update = f'update-{j}'
                 for w in range(self.n_layers-1):
                     weight = f'weights-gradient-{w}'
@@ -211,4 +211,30 @@ class Plotter:
         ax.set_xlabel("X")
         ax.set_ylabel("Y")
 
+        plt.show()
+        
+    def plot_predictions(self, features, dir, name = None):
+        filename = self.get_valid_name(dir, name)
+        if filename is None:
+            return
+        name = "/predictions_" + filename + ".png"
+
+        fig, axs = plt.subplots(2, 2, figsize = (12, 8), gridspec_kw = {'wspace': 0.2, 'hspace': 0.3})
+        fig.suptitle("Predictions", size = "xx-large")
+
+        epochs = np.linspace(0, self.data['n-epochs']-1, 4, dtype = int)
+
+        for i in range(epochs.shape[0]):
+            axis = axs[i//2][i%2]
+            epoch = f'epoch-{epochs[i]}'
+            predictions = np.asarray(self.data[epoch]['predictions'], dtype = int)
+            zeros = (predictions == 0)  # use this boolean array to index features
+            ones = (predictions == 1)
+            axis.scatter(features[zeros, 0], features[zeros, 1], c = "red", label = "0")
+            axis.scatter(features[ones, 0], features[ones, 1], c = "blue", label = "1")
+            axis.set_title(f'Epoch-{epochs[i]}')
+            axis.legend()
+
+        fig.savefig(dir + name, bbox_inches = "tight")
+        print(f'plot saved at {dir + name}')
         plt.show()

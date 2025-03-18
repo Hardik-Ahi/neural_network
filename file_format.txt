@@ -11,22 +11,8 @@ init}
 n-epochs}
 
 {epoch-n
-{n-batches
-n-batches}
-{batch-n  // mini-batch number
-{fp-n
-{activation-n  // activations (layer.a_), including input layer (=> data)
-activation-n}
-fp-n}
-{bp-n
-{err-output
-err-output}
-{err-n  // layer.del_
-err-n}
-{current-gradient-n  // for weights; normalized by mini-batch size => becomes larger as the back passes accumulate for 1 batch
-current-gradient-n}
-bp-n}
-batch-n}
+{n-updates
+n-updates}
 {update-n
 {weights-gradient-n  // gradient that will be applied (given by optimizer)
 weights-gradient-n}
@@ -43,7 +29,6 @@ accuracy}
 loss}
 {confusion-matrix
 confusion-matrix}
+{predictions
+predictions}
 epoch-n}
-
-in 1 epoch, n batches = n updates
-in 1 batch, n fp = n bp

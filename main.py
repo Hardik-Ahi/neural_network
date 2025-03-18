@@ -12,15 +12,7 @@ model.add_layer(Layer(2, leaky_relu(), der_leaky_relu()))
 model.add_layer(Layer(1, sigmoid, der_sigmoid))
 model.compile()
 
-# showing that when output falls in negative part of relu, with leak = 0, no gradients are observed throughout training.
-'''model.weights[0].matrix = np.array([
-    [-0.1, -0.01],
-    [-0.06, -0.04]
-])'''
-
-X_train, y_train = and_gate_dataset(positive_samples = 100, seed = 1)
-# train = np.array([[0, 0, 0], [1, 1, 0], [0, 1, 1], [1, 0, 1]])  # all activations = sigmoid, reached 100% accuracy in 4000 epochs! (XOR problem solved)
-
+X_train, y_train = and_gate_dataset(100)
 
 trainer = Trainer(model, SGD())  # YES! got 100% accuracy in 1500 epochs using sigmoid activation function all-around!
 model.show_weights()
@@ -53,8 +45,5 @@ exit(0)
 # but reducing leak further to 0.01 also performs worse; what's so special about the leak of 0.1? (maybe plug it in a derivation on paper)
 
 plotter = Plotter()
-plotter.set_model_layers(3)
-plotter.read_file(r'logs\test.txt')
-plotter.plot_gradients('./plots', n_points = 700)
-plotter.plot_weights('./plots', n_points = 700)
-plotter.plot_accuracy('./plots', n_points = 700)
+plotter.read_file('./logs/latest.txt')
+plotter.plot_predictions(X_train, './plots', 'latest')
