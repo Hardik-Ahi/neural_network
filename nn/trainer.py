@@ -86,7 +86,7 @@ class Trainer:
                 self.optimizer.on_pass()
                 start_index += self.batch_size
                 batch += 1
-            self.logger.log_n_updates()
+            self.logger.log_n_updates(batch)
             self.predict(features, targets, for_plot = True)
     
     def confusion_matrix(self, labels, predictions):
@@ -177,10 +177,10 @@ class Logger:
         self.epoch = epoch
         self.object[f'epoch-{epoch}'] = dict()
     
-    def log_n_updates(self):
+    def log_n_updates(self, batch):
         if self.stop:
             return
-        self.object[f'epoch-{self.epoch}']['n-updates'] = self.batch+1
+        self.object[f'epoch-{self.epoch}']['n-updates'] = batch
     
     def log_updates_init(self, update):
         if self.stop:
