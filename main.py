@@ -22,28 +22,7 @@ model.show_biases()
 trainer.train(X_train, y_train, 1, 0.02, 100, 30)  # double YES!! got 100% accuracy in 250 epochs using leaky_relu with leak = 0.4!!
 #trainer.save_history("./logs", "test")
 
-X_test, y_test = and_gate_dataset(positive_samples = 100, seed = 2)  # this is some serious testing! gets 100% accuracy here!!!!
-
-# load weights
-'''model.load_weights('./models/test.npz')
-model.show_weights()
-model.show_biases()
-
-print("testing with loaded weights")'''
-trainer.predict(X_test, y_test, True)
-print("train set:")
-trainer.predict(X_train, y_train, True)
-exit(0)
-# what the ?! is happening: got 100% accuracy in 12 epochs using InstanceTrainer!!!
-# and MiniBatchTrainer() performs more like InstanceTrainer with lower batch sizes (4, 8, 16) and more like BatchTrainer with higher sizes (32 etc).
-# biases are now all zeros. we read something about them being able to contribute to training non-intrusively (and with lesser impact) 
-# if they start at the zero point, instead of starting at a high positive / negative point.
-# ADAM has something wrong; it is increasing the loss as training goes on.
-# all this means that no need to get exact same numbers as in keras, and clipping to avoid inf and 0 loss is good enough!
-
-# further info: leaky_relu's leak, the higher it is, the worse the accuracy. leak = 0.1 gives 100% accuracy in merely 5 epochs!!!!
-# but reducing leak further to 0.01 also performs worse; what's so special about the leak of 0.1? (maybe plug it in a derivation on paper)
-
 plotter = Plotter()
+plotter.set_model_layers(3)
 plotter.read_file('./logs/latest.txt')
-plotter.plot_predictions(X_train, './plots', 'latest')
+plotter.plot_gradients("./plots", "latest")

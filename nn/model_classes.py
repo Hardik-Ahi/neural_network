@@ -29,7 +29,7 @@ class Weights:
         self.matrix = self.init_weights(self.rows, self.cols, self.seed)
         self.gradients = np.zeros((self.rows, self.cols))
     
-    def init_weights(self, destination_neurons, source_neurons, seed):  # destination_neurons = fan_in to this layer = fan_out of previous layer
+    def init_weights(self, destination_neurons, source_neurons, seed):  # source_neurons = fan_in to this layer
         std = sqrt(2 / source_neurons)  # standard deviation for 'He' initialization (use it if you use ReLU functions)
         generator = default_rng(seed)
 

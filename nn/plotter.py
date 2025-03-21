@@ -116,7 +116,7 @@ class Plotter:
 
         for i in range(self.data['n-epochs']):
             epoch = f'epoch-{i}'
-            for j in range(self.data[epoch]['n-batches']):
+            for j in range(self.data[epoch]['n-updates']):
                 update = f'update-{j}'
                 for w in range(self.n_layers-1):
                     weight = f'weights-{w}'
@@ -214,10 +214,11 @@ class Plotter:
         plt.show()
         
     def plot_predictions(self, features, dir, name = None):
-        filename = self.get_valid_name(dir, name)
-        if filename is None:
+        if not os.access(dir, os.F_OK):
+            print(f'cannot access {dir}')
             return
-        name = "/predictions_" + filename + ".png"
+        time_str = time.strftime("%I-%M-%S_%p", time.localtime(time.time()))
+        name = "/" + ("predictions_" + time_str if name is None else name) + ".png"
 
         fig, axs = plt.subplots(2, 2, figsize = (12, 8), gridspec_kw = {'wspace': 0.2, 'hspace': 0.3})
         fig.suptitle("Predictions", size = "xx-large")

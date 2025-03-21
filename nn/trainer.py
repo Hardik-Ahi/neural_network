@@ -133,6 +133,7 @@ class Trainer:
         print("Confusion matrix:", matrix)
         if for_plot:
             self.logger.log_accuracy(loss, score, matrix)
+            self.logger.log_predictions(predictions)
         if output_incorrect:
             exists = False
             for i in range(targets.size):
