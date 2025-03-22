@@ -64,4 +64,4 @@ def linear_regression_dataset(samples = 200, x_start = 0, x_end = 100, slope = 1
     y = slope * x + intercept
     y += default_rng(seed).normal(0, sigma_, samples)
 
-    return x, y
+    return x.reshape((x.size, 1)), y.reshape((y.size, 1))

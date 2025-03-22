@@ -11,8 +11,8 @@ class Trainer:
         self.optimizer.set_model(self.model)
         self.logger = Logger()
     
-    def error_output_layer(self, layer_index, label):
-        value = self.optimizer.error_output_layer(layer_index, label)
+    def error_output_layer(self, layer_index, label, feature = None):
+        value = self.optimizer.error_output_layer(layer_index, label, feature)
         self.model.layers[layer_index].b_gradients += value / self.batch_size
         self.model.layers[layer_index].del_ = value
 
@@ -21,8 +21,8 @@ class Trainer:
         self.model.layers[this_index].b_gradients += value / self.batch_size
         self.model.layers[this_index].del_ = value
 
-    def backward_pass(self, label):  # single instance
-        self.error_output_layer(-1, label)
+    def backward_pass(self, label, feature = None):  # single instance
+        self.error_output_layer(-1, label, feature)
         for i in range(len(self.model.layers)-2, 0, -1):  # except the input layer
             self.error_layer(i, i)
         
@@ -52,7 +52,7 @@ class Trainer:
     def save_history(self, dir, name = None):
         self.logger.write_log(dir, name)
     
-    def train(self, features, targets, batch_size = None, learning_rate = 0.01, epochs = 1, log_epochs = None):
+    def train(self, features, targets, batch_size = None, learning_rate = 0.01, epochs = 1, log_epochs = None, use_inputs = False):
         self.minibatch_size = batch_size  # None means batch GD. for stochastic, specify '1'.
         self.learning_rate = learning_rate
         if self.minibatch_size is None:
@@ -74,7 +74,7 @@ class Trainer:
                 self.batch_size = real_features.shape[0]  # real batch size for correctly normalizing gradients for accumulation
                 for i in range(real_features.shape[0]):
                     self.forward_pass(real_features[i])
-                    self.backward_pass(real_targets[i])
+                    self.backward_pass(real_targets[i], real_features[i] if use_inputs else None)
 
                 self.logger.log_updates_init(batch)
                 for j in range(1, len(self.model.layers)):
@@ -132,7 +132,7 @@ class Trainer:
         matrix = self.confusion_matrix(targets, round_off(predictions))
         print("Confusion matrix:", matrix)
         if for_plot:
-            self.logger.log_accuracy(loss, score, matrix)
+            self.logger.log_score(loss, score, matrix)
             self.logger.log_predictions(predictions)
         if output_incorrect:
             exists = False
@@ -142,6 +142,31 @@ class Trainer:
                         exists = True
                         print("incorrect predictions:")
                     print(f'input = {features[i]}, label = {targets[i]}, prediction = {predictions[i]}')
+
+class RegressionTrainer(Trainer):
+    def predict(self, features, targets, for_plot = False):
+        targets = targets.reshape((targets.size,))
+        predictions = list()
+
+        for i in range(features.shape[0]):
+            self.forward_pass(features[i])
+            predictions.append(self.model.layers[-1].a_)
+
+        for i in range(len(predictions)):
+            predictions[i] = predictions[i][0][0] * features[i][0] + predictions[i][1][0]
+        predictions = np.asarray(predictions)
+        loss = self.model.loss_function(targets, predictions)
+        print("Loss:", loss)
+
+        # R^2 score
+        residuals = np.sum((targets - predictions)**2)
+        means = np.sum((targets - np.mean(targets))**2)
+        score = 1 - (residuals / means)
+        print("R2 score:", score)
+
+        if for_plot:
+            self.logger.log_score(loss, score)
+            self.logger.log_predictions(predictions)
 
 class Logger:
     def __init__(self):
@@ -213,13 +238,14 @@ class Logger:
         ref = self.object[f'epoch-{self.epoch}']
         ref['predictions'] = predictions.tolist()
     
-    def log_accuracy(self, loss, accuracy, confusion_matrix):
+    def log_score(self, loss, score, confusion_matrix = None):
         if self.stop:
             return
         ref = self.object[f'epoch-{self.epoch}']
-        ref['accuracy'] = accuracy
+        ref['score'] = score
         ref['loss'] = loss
-        ref['confusion-matrix'] = confusion_matrix
+        if confusion_matrix is not None:
+            ref['confusion-matrix'] = confusion_matrix
         
     def write_log(self, directory = "./logs", name = None):
         if not os.access(directory, os.F_OK):

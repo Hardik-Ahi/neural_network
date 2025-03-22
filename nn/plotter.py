@@ -60,7 +60,7 @@ class Plotter:
                         bias_gradients[bias] = list()
                     bias_gradients[bias].append(np.asarray(self.data[epoch][update][bias]))
         
-        fig, axs = plt.subplots(2, self.n_layers-1, figsize = (15, 8), gridspec_kw = {'wspace': 0.2, 'hspace': 0.3})
+        fig, axs = plt.subplots(2, self.n_layers-1, figsize = (7 * (self.n_layers-1), 8), gridspec_kw = {'wspace': 0.2, 'hspace': 0.3}, squeeze = False)
         fig.suptitle(f'Gradients', size = 'xx-large')
 
         # weights
@@ -125,7 +125,7 @@ class Plotter:
                     bias_name = f'bias-{b}'
                     bias[bias_name].append(np.asarray(self.data[epoch][update][bias_name]))
         
-        fig, axs = plt.subplots(2, self.n_layers-1, figsize = (15, 8), gridspec_kw = {'wspace': 0.2, 'hspace': 0.3})
+        fig, axs = plt.subplots(2, self.n_layers-1, figsize = (7*(self.n_layers-1), 8), gridspec_kw = {'wspace': 0.2, 'hspace': 0.3}, squeeze = False)
         fig.suptitle("Weights & Bias Values", size = 'xx-large')
         # weights
         for ax in range(self.n_layers-1):
@@ -156,47 +156,55 @@ class Plotter:
         print(f'plot saved at {dir + name}')
         plt.show()
     
-    def plot_accuracy(self, dir, name = None, n_points = None):
+    def plot_score(self, dir, name = None, n_points = None, confusion_matrix = True):
         if not os.access(dir, os.F_OK):
             print(f'cannot access {dir}')
             return
         time_str = time.strftime("%I-%M-%S_%p", time.localtime(time.time()))
-        name = "/" + ("accuracy_" + time_str if name is None else name) + ".png"
+        name = "/" + ("score_" + time_str if name is None else name) + ".png"
 
-        accuracy_list = list()
+        score_list = list()
         loss_list = list()
-        confusion_matrix = {'tp': list(), 'tn': list(), 'fp': list(), 'fn': list()}
 
         for i in range(self.data['n-epochs']):
             epoch = f'epoch-{i}'
-            accuracy_list.append(self.data[epoch]['accuracy'])
+            score_list.append(self.data[epoch]['score'])
             loss_list.append(self.data[epoch]['loss'])
-            matrix = self.data[epoch]['confusion-matrix']
-            for key in matrix.keys():
-                confusion_matrix[key].append(matrix[key])
 
-        fig, axs = plt.subplots(1, 2, figsize = (15, 5), gridspec_kw = {'wspace': 0.2, 'hspace': 0.3})
+        if confusion_matrix:
+            confusion_matrix = {'tp': list(), 'tn': list(), 'fp': list(), 'fn': list()}
+            for i in range(self.data['n-epochs']):
+                matrix = self.data[epoch]['confusion-matrix']
+                for key in matrix.keys():
+                    confusion_matrix[key].append(matrix[key])
+
+        if confusion_matrix:
+            fig, axs = plt.subplots(1, 2, figsize = (15, 5), gridspec_kw = {'wspace': 0.2, 'hspace': 0.3})
+        else:
+            fig, axs = plt.subplots(figsize = (8, 6))
+            axs = np.array([axs])
         fig.suptitle(f"Metrics", size = 'xx-large')
 
         loss_list = np.asarray(loss_list)
-        accuracy_list = np.asarray(accuracy_list)
+        score_list = np.asarray(score_list)
         if n_points is not None:
                 loss_list = Plotter.select_samples(loss_list, n_points)
-                accuracy_list = Plotter.select_samples(accuracy_list, n_points)
+                score_list = Plotter.select_samples(score_list, n_points)
         axs[0].plot(loss_list, label = "Loss")
-        axs[0].plot(accuracy_list, label = "Accuracy")
+        axs[0].plot(score_list, label = "Score")
         axs[0].set_xlabel("Epochs")
-        axs[0].set_title("Loss & Accuracy")
+        axs[0].set_title("Loss & Score")
         axs[0].legend()
 
-        for key in confusion_matrix.keys():
-            confusion_matrix[key] = np.asarray(confusion_matrix[key])
-            if n_points is not None:
-                confusion_matrix[key] = Plotter.select_samples(confusion_matrix[key], n_points)
-            axs[1].plot(confusion_matrix[key], label = key)
-        axs[1].set_xlabel("Epochs")
-        axs[1].set_title("Confusion Matrix")
-        axs[1].legend()
+        if confusion_matrix:
+            for key in confusion_matrix.keys():
+                confusion_matrix[key] = np.asarray(confusion_matrix[key])
+                if n_points is not None:
+                    confusion_matrix[key] = Plotter.select_samples(confusion_matrix[key], n_points)
+                axs[1].plot(confusion_matrix[key], label = key)
+            axs[1].set_xlabel("Epochs")
+            axs[1].set_title("Confusion Matrix")
+            axs[1].legend()
 
         fig.savefig(dir + name, bbox_inches = "tight")
         print(f'plot saved at {dir + name}')

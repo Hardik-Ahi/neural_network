@@ -39,6 +39,15 @@ def der_binary_cross_entropy(label, output, epsilon = 1e-7):  # output belongs t
     output = np.clip(output, epsilon, 1 - epsilon)
     return ((1 - label)/(1 - output)) - (label / output)
 
+def mean_square_error(labels, predictions):
+    labels = labels.reshape(predictions.shape)
+    return (1 / labels.size) * np.sum((labels - predictions)**2)
+
+def der_mean_square_error(target, output, feature):
+    # output = 2 neurons: m, b.
+    prediction = output[0][0] * feature + output[1][0]
+    return np.array([2 * feature * (prediction - target), 2 * (prediction - target)]).reshape((2, 1))
+
 def sigmoid_func(x):
     return 1 / (1 + np.exp(-x))
 
