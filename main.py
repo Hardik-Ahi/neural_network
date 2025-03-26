@@ -20,13 +20,10 @@ trainer = RegressionTrainer(model, SGD())
 model.show_weights()
 model.show_biases()
 
-
-trainer.train(X_train, y_train, 1, 0.02, 10, use_inputs = True)
+trainer.train(X_train, y_train, 1, 0.02, 8, use_inputs = True)
 trainer.save_history("./logs", "regression")
 
 plotter = Plotter()
 plotter.set_model_layers(2)
 plotter.read_file('./logs/regression.txt')
-plotter.plot_gradients("./plots", "regression", 700)
-plotter.plot_weights("./plots", "regression", 700)
-plotter.plot_score("./plots", "regression", 700, confusion_matrix = False)
+plotter.plot_regression(X_train, y_train, "./plots", "line")

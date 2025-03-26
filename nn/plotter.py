@@ -40,7 +40,7 @@ class Plotter:
             print(f'cannot access {dir}')
             return
         time_str = time.strftime("%I-%M-%S_%p", time.localtime(time.time()))
-        name = "/" + ("gradients_" + time_str if name is None else name) + ".png"
+        name = "/gradients_" + (time_str if name is None else name) + ".png"
 
         weights_gradients = dict()
         bias_gradients = dict()
@@ -97,7 +97,7 @@ class Plotter:
             print(f'cannot access {dir}')
             return
         time_str = time.strftime("%I-%M-%S_%p", time.localtime(time.time()))
-        name = "/" + ("weights_" + time_str if name is None else name) + ".png"
+        name = "/weights_" + (time_str if name is None else name) + ".png"
 
         weights = dict()
         bias = dict()
@@ -161,7 +161,7 @@ class Plotter:
             print(f'cannot access {dir}')
             return
         time_str = time.strftime("%I-%M-%S_%p", time.localtime(time.time()))
-        name = "/" + ("score_" + time_str if name is None else name) + ".png"
+        name = "/score_" + (time_str if name is None else name) + ".png"
 
         score_list = list()
         loss_list = list()
@@ -226,7 +226,7 @@ class Plotter:
             print(f'cannot access {dir}')
             return
         time_str = time.strftime("%I-%M-%S_%p", time.localtime(time.time()))
-        name = "/" + ("predictions_" + time_str if name is None else name) + ".png"
+        name = "/predictions_" + (time_str if name is None else name) + ".png"
 
         fig, axs = plt.subplots(2, 2, figsize = (12, 8), gridspec_kw = {'wspace': 0.2, 'hspace': 0.3})
         fig.suptitle("Predictions", size = "xx-large")
@@ -244,6 +244,36 @@ class Plotter:
             axis.set_title(f'Epoch-{epochs[i]}')
             axis.legend()
 
+        fig.savefig(dir + name, bbox_inches = "tight")
+        print(f'plot saved at {dir + name}')
+        plt.show()
+    
+    def plot_regression(self, features, targets, dir, name = None):
+        if not os.access(dir, os.F_OK):
+            print(f'cannot access {dir}')
+            return
+        time_str = time.strftime("%I-%M-%S_%p", time.localtime(time.time()))
+        name = "/regression_" + (time_str if name is None else name) + ".png"
+
+        fig, axs = plt.subplots(2, 2, figsize = (12, 8), gridspec_kw = {'wspace': 0.2, 'hspace': 0.3})
+        fig.suptitle("Line of Regression", size = "xx-large")
+
+        epochs = np.linspace(0, self.data['n-epochs']-1, 4, dtype = int)
+
+        def generate_point(slope, intercept, x):
+            return slope * x + intercept
+
+        for i in range(epochs.shape[0]):
+            axis = axs[i//2][i%2]
+            epoch = f'epoch-{epochs[i]}'
+            predictions = np.asarray(self.data[epoch]['predictions'])  # slope & intercept
+            mean_slope = np.mean(predictions[:, 0])
+            mean_intercept = np.mean(predictions[:, 1])
+            predictions = predictions[0]
+            axis.scatter(features[:, 0], targets[:, 0])
+            axis.axline((features[0, 0], generate_point(predictions[0, 0], predictions[1, 0], features[0, 0])), slope = predictions[0, 0], c = "red")
+            axis.set_title(f'Epoch-{epochs[i]}')
+        
         fig.savefig(dir + name, bbox_inches = "tight")
         print(f'plot saved at {dir + name}')
         plt.show()

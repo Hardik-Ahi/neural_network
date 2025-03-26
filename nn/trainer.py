@@ -152,14 +152,16 @@ class RegressionTrainer(Trainer):
             self.forward_pass(features[i])
             predictions.append(self.model.layers[-1].a_)
 
-        for i in range(len(predictions)):
-            predictions[i] = predictions[i][0][0] * features[i][0] + predictions[i][1][0]
         predictions = np.asarray(predictions)
-        loss = self.model.loss_function(targets, predictions)
+        temp = list()
+        for i in range(len(predictions)):
+            temp.append(predictions[i][0][0] * features[i][0] + predictions[i][1][0])
+        temp = np.asarray(temp)
+        loss = self.model.loss_function(targets, temp)
         print("Loss:", loss)
 
         # R^2 score
-        residuals = np.sum((targets - predictions)**2)
+        residuals = np.sum((targets - temp)**2)
         means = np.sum((targets - np.mean(targets))**2)
         score = 1 - (residuals / means)
         print("R2 score:", score)
