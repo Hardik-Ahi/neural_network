@@ -265,8 +265,9 @@ class Plotter:
             epoch = f'epoch-{epochs[i]}'
             predictions = np.asarray(self.data[epoch]['predictions'])
             axis.scatter(features[:, 0], targets[:, 0], label = "targets")
-            axis.scatter(features[:, 0], predictions, label = "predictions", c = "red", s = 1)
+            axis.scatter(features[:, 0], predictions, label = "predictions", c = "red", s = 3)
             axis.set_title(f'Epoch-{epochs[i]}')
+            axis.legend()
         
         fig.savefig(dir + name, bbox_inches = "tight")
         print(f'plot saved at {dir + name}')
