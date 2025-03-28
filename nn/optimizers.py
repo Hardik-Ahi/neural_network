@@ -15,11 +15,8 @@ class SGD():
     def gradient_biases(self, layer_index):
         return self.model.layers[layer_index].b_gradients
     
-    def error_output_layer(self, layer_index, label, feature = None):
-        if feature is None:
-            first_term = self.model.der_loss_function(label, self.model.layers[layer_index].a_[0][0])
-        else:
-            first_term = self.model.der_loss_function(label, self.model.layers[layer_index].a_, feature)
+    def error_output_layer(self, layer_index, label):
+        first_term = self.model.der_loss_function(label, self.model.layers[layer_index].a_[0][0])
         return first_term * self.model.layers[layer_index].der_activation(self.model.layers[layer_index].z_)
 
     def error_layer(self, this_index, weight_index):  # weights connecting this layer to next layer

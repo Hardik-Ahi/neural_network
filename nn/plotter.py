@@ -256,22 +256,16 @@ class Plotter:
         name = "/regression_" + (time_str if name is None else name) + ".png"
 
         fig, axs = plt.subplots(2, 2, figsize = (12, 8), gridspec_kw = {'wspace': 0.2, 'hspace': 0.3})
-        fig.suptitle("Line of Regression", size = "xx-large")
+        fig.suptitle("Predictions", size = "xx-large")
 
         epochs = np.linspace(0, self.data['n-epochs']-1, 4, dtype = int)
-
-        def generate_point(slope, intercept, x):
-            return slope * x + intercept
 
         for i in range(epochs.shape[0]):
             axis = axs[i//2][i%2]
             epoch = f'epoch-{epochs[i]}'
-            predictions = np.asarray(self.data[epoch]['predictions'])  # slope & intercept
-            mean_slope = np.mean(predictions[:, 0])
-            mean_intercept = np.mean(predictions[:, 1])
-            predictions = predictions[0]
-            axis.scatter(features[:, 0], targets[:, 0])
-            axis.axline((features[0, 0], generate_point(predictions[0, 0], predictions[1, 0], features[0, 0])), slope = predictions[0, 0], c = "red")
+            predictions = np.asarray(self.data[epoch]['predictions'])
+            axis.scatter(features[:, 0], targets[:, 0], label = "targets")
+            axis.scatter(features[:, 0], predictions, label = "predictions", c = "red", s = 1)
             axis.set_title(f'Epoch-{epochs[i]}')
         
         fig.savefig(dir + name, bbox_inches = "tight")

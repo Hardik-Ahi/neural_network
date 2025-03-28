@@ -24,6 +24,14 @@ def sigmoid(x):
 def round_off(x):
     return 1 if x >= 0.5 else 0
 
+@np.vectorize
+def mirror(x):
+    return x
+
+@np.vectorize
+def der_mirror(x):
+    return 1
+
 def binary_loss(labels, predictions, epsilon = 1e-7):
     total = predictions.size
     labels = labels.reshape(predictions.shape)
@@ -43,10 +51,8 @@ def mean_square_error(labels, predictions):
     labels = labels.reshape(predictions.shape)
     return (1 / labels.size) * np.sum((labels - predictions)**2)
 
-def der_mean_square_error(target, output, feature):
-    # output = 2 neurons: m, b.
-    prediction = output[0][0] * feature + output[1][0]
-    return np.array([2 * feature * (prediction - target), 2 * (prediction - target)]).reshape((2, 1))
+def der_mean_square_error(label, output):
+    return 2 * (output - label)
 
 def sigmoid_func(x):
     return 1 / (1 + np.exp(-x))

@@ -11,8 +11,8 @@ class Trainer:
         self.optimizer.set_model(self.model)
         self.logger = Logger()
     
-    def error_output_layer(self, layer_index, label, feature = None):
-        value = self.optimizer.error_output_layer(layer_index, label, feature)
+    def error_output_layer(self, layer_index, label):
+        value = self.optimizer.error_output_layer(layer_index, label)
         self.model.layers[layer_index].b_gradients += value / self.batch_size
         self.model.layers[layer_index].del_ = value
 
@@ -21,8 +21,8 @@ class Trainer:
         self.model.layers[this_index].b_gradients += value / self.batch_size
         self.model.layers[this_index].del_ = value
 
-    def backward_pass(self, label, feature = None):  # single instance
-        self.error_output_layer(-1, label, feature)
+    def backward_pass(self, label):  # single instance
+        self.error_output_layer(-1, label)
         for i in range(len(self.model.layers)-2, 0, -1):  # except the input layer
             self.error_layer(i, i)
         
@@ -52,7 +52,7 @@ class Trainer:
     def save_history(self, dir, name = None):
         self.logger.write_log(dir, name)
     
-    def train(self, features, targets, batch_size = None, learning_rate = 0.01, epochs = 1, log_epochs = None, use_inputs = False):
+    def train(self, features, targets, batch_size = None, learning_rate = 0.01, epochs = 1, log_epochs = None):
         self.minibatch_size = batch_size  # None means batch GD. for stochastic, specify '1'.
         self.learning_rate = learning_rate
         if self.minibatch_size is None:
@@ -74,7 +74,7 @@ class Trainer:
                 self.batch_size = real_features.shape[0]  # real batch size for correctly normalizing gradients for accumulation
                 for i in range(real_features.shape[0]):
                     self.forward_pass(real_features[i])
-                    self.backward_pass(real_targets[i], real_features[i] if use_inputs else None)
+                    self.backward_pass(real_targets[i])
 
                 self.logger.log_updates_init(batch)
                 for j in range(1, len(self.model.layers)):
@@ -150,18 +150,14 @@ class RegressionTrainer(Trainer):
 
         for i in range(features.shape[0]):
             self.forward_pass(features[i])
-            predictions.append(self.model.layers[-1].a_)
+            predictions.append(self.model.layers[-1].a_[0][0])
 
         predictions = np.asarray(predictions)
-        temp = list()
-        for i in range(len(predictions)):
-            temp.append(predictions[i][0][0] * features[i][0] + predictions[i][1][0])
-        temp = np.asarray(temp)
-        loss = self.model.loss_function(targets, temp)
+        loss = self.model.loss_function(targets, predictions)
         print("Loss:", loss)
 
         # R^2 score
-        residuals = np.sum((targets - temp)**2)
+        residuals = np.sum((targets - predictions)**2)
         means = np.sum((targets - np.mean(targets))**2)
         score = 1 - (residuals / means)
         print("R2 score:", score)
