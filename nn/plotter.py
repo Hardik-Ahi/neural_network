@@ -221,12 +221,27 @@ class Plotter:
 
         plt.show()
         
-    def plot_predictions(self, features, dir, name = None):
+    def plot_predictions(self, features, dir, name = None, predictions = None):
         if not os.access(dir, os.F_OK):
             print(f'cannot access {dir}')
             return
         time_str = time.strftime("%I-%M-%S_%p", time.localtime(time.time()))
         name = "/predictions_" + (time_str if name is None else name) + ".png"
+
+        if predictions is not None:
+            fig, axs = plt.subplots(figsize = (6, 4))
+            fig.suptitle("Predictions", size = "xx-large")
+
+            zeros = (predictions == 0)  # use this boolean array to index features
+            ones = (predictions == 1)
+            axis.scatter(features[zeros, 0], features[zeros, 1], c = "red", label = "0")
+            axis.scatter(features[ones, 0], features[ones, 1], c = "blue", label = "1")
+            axis.legend()
+
+            fig.savefig(dir + name, bbox_inches = "tight")
+            print(f'plot saved at {dir + name}')
+            plt.show()
+            return
 
         fig, axs = plt.subplots(2, 2, figsize = (12, 8), gridspec_kw = {'wspace': 0.2, 'hspace': 0.3})
         fig.suptitle("Predictions", size = "xx-large")
@@ -248,12 +263,25 @@ class Plotter:
         print(f'plot saved at {dir + name}')
         plt.show()
     
-    def plot_regression(self, features, targets, dir, name = None):
+    def plot_regression(self, features, targets, dir, name = None, predictions = None):
         if not os.access(dir, os.F_OK):
             print(f'cannot access {dir}')
             return
         time_str = time.strftime("%I-%M-%S_%p", time.localtime(time.time()))
         name = "/regression_" + (time_str if name is None else name) + ".png"
+
+        if predictions is not None:
+            fig, ax = plt.subplots(figsize = (6, 4))
+            fig.suptitle("Predictions", size = "xx-large")
+
+            ax.scatter(features[:, 0], targets[:, 0], label = "targets")
+            ax.scatter(features[:, 0], predictions, label = "predictions", c = "red", s = 3)
+            ax.legend()
+
+            fig.savefig(dir + name, bbox_inches = "tight")
+            print(f'plot saved at {dir + name}')
+            plt.show()
+            return
 
         fig, axs = plt.subplots(2, 2, figsize = (12, 8), gridspec_kw = {'wspace': 0.2, 'hspace': 0.3})
         fig.suptitle("Predictions", size = "xx-large")

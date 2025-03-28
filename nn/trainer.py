@@ -142,6 +142,7 @@ class Trainer:
                         exists = True
                         print("incorrect predictions:")
                     print(f'input = {features[i]}, label = {targets[i]}, prediction = {predictions[i]}')
+        return predictions
 
 class RegressionTrainer(Trainer):
     def predict(self, features, targets, for_plot = False):
@@ -165,6 +166,7 @@ class RegressionTrainer(Trainer):
         if for_plot:
             self.logger.log_score(loss, score)
             self.logger.log_predictions(predictions)
+        return predictions
 
 class Logger:
     def __init__(self):
