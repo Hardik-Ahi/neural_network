@@ -37,26 +37,17 @@ def get_minibatch(features, targets, batch_size = 1, start_at = 0):
 def make_standard(x, mean, std):
     return (x - mean) / std
 
-def standardize_data(features):
-    result = np.array([])
+def standardize_data(features, from_means = None, from_stds = None):  # in-place operation
+    means = list()
+    stds = list()
     for i in range(features.shape[1]):
-        column = features[:, i]
-        mean = 0
-        for j in range(column.shape[0]):
-            mean += column[j]
-        mean = mean / column.shape[0]
-
-        var = 0
-        for j in range(column.shape[0]):
-            var += ((column[j] - mean)**2)
-        var = var / column.shape[0]
-        std = sqrt(var)
-
-        if result.size == 0:
-            result = make_standard(column, mean, std).reshape((column.shape[0], 1))
-        else:
-            result = np.hstack((result, make_standard(column, mean, std).reshape((column.shape[0], 1))))
-    return result
+        mean = np.mean(features[:, i]) if from_means is None else from_means[i]
+        std = np.std(features[:, i]) if from_stds is None else from_stds[i]
+        features[:, i] = (features[:, i] - mean) / std
+        means.append(mean)
+        stds.append(std)
+    return means, stds
+    
 
 def linear_regression_dataset(samples = 200, x_start = 0, x_end = 100, slope = 1, intercept = 5, sigma_ = 8, seed = 7):
     x = np.linspace(x_start, x_end, samples)
