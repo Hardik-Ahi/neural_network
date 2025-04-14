@@ -1,5 +1,5 @@
 import numpy as np
-from numpy import default_rng
+from numpy.random import default_rng
 import matplotlib.pyplot as plt
 from nn.trainer import Logger
 import os, time
@@ -329,7 +329,7 @@ class Plotter:
             for i in range(y.size):  # y first
                 for j in range(x.size):
                     model.set_weights(original_vector + y[i] * vector1 + x[j] * vector2)
-                    loss, _ = trainer.predict(features, targets, quiet = True)
+                    _, loss, _ = trainer.predict(features, targets, quiet = True)
                     z[i, j] = loss
             
             axis = axs[ax//2][ax%2]
