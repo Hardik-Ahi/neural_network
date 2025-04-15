@@ -1,6 +1,6 @@
 import numpy as np
 from numpy.random import default_rng
-from math import sqrt
+import pandas as pd
 
 def get_vector(seed = 1, upper_bound = 10, n_samples = 10):
     generator = default_rng(seed)
@@ -56,3 +56,41 @@ def linear_regression_dataset(samples = 200, x_start = 0, x_end = 100, slope = 1
     y += default_rng(seed).normal(0, sigma_, samples)
 
     return x.reshape((x.size, 1)), y.reshape((y.size, 1))
+
+def equalize_classes(dataframe, target_name):
+    if target_name not in dataframe.columns:
+        print(f"invalid target name: {target_name}")
+        return
+    
+    counts = dataframe[target_name].value_counts()
+    least = counts.min()
+    to_remove = counts - least
+    
+    for class_name in to_remove.index:
+        temp = dataframe[dataframe[target_name] == class_name]
+        drop_count = to_remove[class_name]
+        if drop_count == 0:
+            continue
+        print(f'dropping {drop_count} for class: {class_name}')
+        dataframe.drop(temp.iloc[:drop_count].index, inplace = True)
+
+    dataframe.reset_index(drop = True, inplace = True)
+
+def split_classes(dataframe, target_name, test_size = 0.2):
+    if target_name not in dataframe.columns:
+        print(f'invalid target name: {target_name}')
+        return
+    
+    counts = pd.Series(dataframe[target_name].value_counts() * test_size, dtype = int)  # we need this many counts of each class in test set
+    frames = []
+    # simply transfer first 'n' rows for each class from main df to test df.
+    for class_name in counts.index:
+        temp = dataframe[dataframe[target_name] == class_name]
+        copy_df = temp.iloc[:counts[class_name]]
+        frames.append(copy_df)
+        dataframe.drop(copy_df.index, inplace = True)
+    
+    dataframe.reset_index(drop = True, inplace = True)
+    test_df = pd.concat(frames)
+    test_df.reset_index(drop = True, inplace = True)
+    return test_df
