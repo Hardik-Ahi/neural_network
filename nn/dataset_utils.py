@@ -102,3 +102,34 @@ def split_data(dataframe, test_size = 0.2, seed = 1):
     test_df.reset_index(drop = True, inplace = True)
 
     return train_df, test_df
+
+def pca(dataframe, target_name, n_components = 2):  # assume all features are valid (continuous numeric) for pca
+    if target_name not in dataframe.columns:
+        print(f'invalid target name: {target_name}')
+        return
+    features = dataframe.drop(columns = [target_name])
+
+    # 1. standardize vars
+    for col in features.columns:
+        mean = features[col].mean()
+        std = features[col].std()
+        features[col] = (features[col] - mean)/std
+    
+    # 2. covariance matrix
+    array = features.to_numpy()
+    matrix = np.cov(array, rowvar = False)
+    
+    # 3. eigenvalues, eigenvectors
+    evalues, evectors = np.linalg.eig(matrix)
+    eframe = pd.DataFrame(np.hstack((evectors.T, evalues.reshape(evalues.size, 1))))  # rows = vectors
+    eframe.sort_values(by = eframe.columns.size-1, ascending = False, inplace = True)
+    eframe.drop(columns = [eframe.columns.size-1], inplace = True)
+    
+    # 4. form feature vector
+    if n_components > eframe.shape[0]:
+        print(f'asking too many components: {n_components} for {eframe.shape[0]} rows')
+    vectors = eframe.iloc[:n_components].to_numpy().T
+
+    # 5. recast data along feature vector
+    result = np.dot(array, vectors)  # MxN data * NxP vectors = MxP result
+    return result
