@@ -148,7 +148,7 @@ class Trainer:
         return predictions, loss, score
 
 class RegressionTrainer(Trainer):
-    def predict(self, features, targets, for_plot = False):
+    def predict(self, features, targets, for_plot = False, quiet = False):
         targets = targets.reshape((targets.size,))
         predictions = list()
 
@@ -158,13 +158,15 @@ class RegressionTrainer(Trainer):
 
         predictions = np.asarray(predictions)
         loss = self.model.loss_function(targets, predictions)
-        print("Loss:", loss)
 
         # R^2 score
         residuals = np.sum((targets - predictions)**2)
         means = np.sum((targets - np.mean(targets))**2)
         score = 1 - (residuals / means)
-        print("R2 score:", score)
+
+        if not quiet:
+            print("Loss:", loss)
+            print("R2 score:", score)
 
         if for_plot:
             self.logger.log_score(loss, score)
