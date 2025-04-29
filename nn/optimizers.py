@@ -2,18 +2,17 @@ import numpy as np
 
 # optimizer will give the trainer the gradients[] matrix to apply to the weights.
 class SGD():
-
     def set_model(self, model):
         self.model = model
+
+    def gradient_weights(self, weight_index):
+        return self.model.weights[weight_index].gradients
+    
+    def gradient_biases(self, layer_index):
+        return self.model.layers[layer_index].b_gradients
     
     def current_gradient(self, weight_index):
         return np.matmul(self.model.weights[weight_index].layer_2.del_, np.transpose(self.model.weights[weight_index].layer_1.a_))
-    
-    def gradient_weights(self, weight_index):
-        return self.model.weights[weight_index].gradients
-
-    def gradient_biases(self, layer_index):
-        return self.model.layers[layer_index].b_gradients
     
     def error_output_layer(self, layer_index, label):
         first_term = self.model.der_loss_function(label, self.model.layers[layer_index].a_[0][0])
@@ -33,7 +32,39 @@ class SGD():
         for layer in self.model.layers:
             layer.del_ = np.zeros((layer.n_neurons, 1))
             layer.b_gradients = np.zeros((layer.n_neurons, 1))
+    
+    def update_biases(self, layer_index, l_rate):
+        value = l_rate * self.gradient_biases(layer_index)
+        self.model.layers[layer_index].b_ -= value
+        return value
+    
+    def update_weights(self, weight_index, l_rate):
+        value = l_rate * self.gradient_weights(weight_index)
+        self.model.weights[weight_index].matrix -= value
+        return value
 
+class Momentum(SGD):
+    def __init__(self, beta = 0.9):
+        self.beta = beta
+    
+    def set_model(self, model):
+        super().set_model(model)
+
+        # create space for storing momentum terms for every parameter
+        self.weights = list(map(lambda weights: np.zeros(weights.matrix.shape), self.model.weights))
+        self.biases = list(map(lambda layer: np.zeros(layer.b_.shape), self.model.layers))
+    
+    # keep momentum upon applying update, not while accumulation along a mini batch
+    def update_weights(self, weight_index, l_rate):
+        self.weights[weight_index] = self.beta * self.weights[weight_index] - (l_rate * self.gradient_weights(weight_index))  # update momentum term
+        self.model.weights[weight_index].matrix += self.weights[weight_index]
+        return -self.weights[weight_index]  # because already subtracting in first line
+
+    def update_biases(self, layer_index, l_rate):
+        self.biases[layer_index] = self.beta * self.biases[layer_index] - (l_rate * self.gradient_biases(layer_index))  # update momentum term
+        self.model.layers[layer_index].b_ += self.biases[layer_index]
+        return -self.biases[layer_index]
+    
 # make every layer update its biases using layer.b_gradients rather than layer.del_
 # layer.del_ is the error due to the present training sample; it needs to remain unmodified by optimizers to pass back to
 # the weights and biases so that THEY can calculate their gradients (modified or not) correctly.

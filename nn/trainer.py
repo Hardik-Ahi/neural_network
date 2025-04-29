@@ -33,13 +33,11 @@ class Trainer:
         self.model.weights[weight_index].gradients += self.optimizer.current_gradient(weight_index) / self.batch_size
     
     def update_biases(self, layer_index):
-        value = self.optimizer.gradient_biases(layer_index)
-        self.model.layers[layer_index].b_ -= ((self.learning_rate) * value)
+        value = self.optimizer.update_biases(layer_index, self.learning_rate)  # final, applied value (includes scaling by learning rate)
         self.logger.log_update_bias(layer_index, value)
     
     def update_weights(self, weight_index):
-        value = self.optimizer.gradient_weights(weight_index)
-        self.model.weights[weight_index].matrix -= ((self.learning_rate) * value)
+        value = self.optimizer.update_weights(weight_index, self.learning_rate)
         self.logger.log_update_weights(weight_index, value)
     
     def forward_pass(self, input_data):
