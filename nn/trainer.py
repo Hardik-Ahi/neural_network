@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.random import default_rng
 from nn.dataset_utils import get_minibatch
 from nn.functions import round_off
 import json, os, time
@@ -33,12 +34,10 @@ class Trainer:
         self.model.weights[weight_index].gradients += self.optimizer.current_gradient(weight_index) / self.batch_size
     
     def update_biases(self, layer_index):
-        value = self.optimizer.update_biases(layer_index, self.learning_rate)  # final, applied value (includes scaling by learning rate)
-        self.logger.log_update_bias(layer_index, value)
+        return self.optimizer.update_biases(layer_index, self.learning_rate)  # final, applied value (includes scaling by learning rate)
     
     def update_weights(self, weight_index):
-        value = self.optimizer.update_weights(weight_index, self.learning_rate)
-        self.logger.log_update_weights(weight_index, value)
+        return self.optimizer.update_weights(weight_index, self.learning_rate)
     
     def forward_pass(self, input_data):
         # input_data shape = (1, n_cols)
@@ -75,10 +74,19 @@ class Trainer:
                     self.backward_pass(real_targets[i])
 
                 self.logger.log_updates_init(batch)
+                weights = list()
+                bias = list()
+                
                 for j in range(1, len(self.model.layers)):
-                    self.update_biases(j)
+                    bias.append(self.update_biases(j))
                 for j in range(len(self.model.weights)):
-                    self.update_weights(j)
+                    weights.append(self.update_weights(j))
+
+                self.logger.log_update_weights(0, weights[0])
+                self.logger.log_update_weights(len(weights)-1, weights[-1])
+                self.logger.log_update_bias(1, bias[0])
+                self.logger.log_update_bias(len(bias), bias[-1])
+
                 self.logger.log_updates_finish(self.model.weights, self.model.layers)
 
                 self.optimizer.on_pass()
@@ -192,11 +200,13 @@ class Logger:
         dict_ = self.object['init']
         dict_['weights'] = dict()
         dict_['bias'] = dict()
+
+        dict_['weights'][f'weights-{0}'] = model_weights[0].matrix.tolist()
+        dict_['weights'][f'weights-{len(model_weights)-1}'] = model_weights[-1].matrix.tolist()
+        self.object['n_weights'] = [0, len(model_weights)-1]
         
-        for i in range(len(model_weights)):
-            dict_['weights'][f'weights-{i}'] = model_weights[i].matrix.tolist()
-        for i in range(len(model_layers)):
-            dict_['bias'][f'bias-{i}'] = model_layers[i].b_.tolist()
+        dict_['bias'][f'bias-{1}'] = model_layers[1].b_.tolist()
+        dict_['bias'][f'bias-{len(model_weights)}'] = model_layers[-1].b_.tolist()
     
     def log_epoch(self, epoch):
         if epoch > self.limit:
@@ -232,12 +242,14 @@ class Logger:
             return
         ref = self.object[f'epoch-{self.epoch}'][f'update-{self.update}']
 
-        for i in range(len(model_weights)):
+        for i in self.object['n_weights']:
             ref[f'weights-{i}'] = model_weights[i].matrix.tolist()
-        for i in range(len(model_layers)):
+        for i in self.object['n_weights']:
+            i += 1
             ref[f'bias-{i}'] = model_layers[i].b_.tolist()
     
     def log_predictions(self, predictions):
+        predictions = predictions[:200]  # to limit size of log file
         ref = self.object[f'epoch-{self.epoch}']
         ref['predictions'] = predictions.tolist()
     

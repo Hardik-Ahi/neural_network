@@ -1,34 +1,19 @@
-trainer (generalize using all 3 definitions)
+n_weights
 
-{init
-{weights-n
-weights-n}
-{bias-n
-bias-n}
-init}
+init:
+    weights-n
+    bias-n
 
-{n-epochs  // total no.of epochs written to this file
-n-epochs}
+n-epochs
 
-{epoch-n
-{n-updates
-n-updates}
-{update-n
-{weights-gradient-n  // gradient that will be applied (given by optimizer)
-weights-gradient-n}
-{bias-gradient-n  // layer.b_gradients, also given by optimizer
-bias-gradient-n}
-{weights-n  // updated
-weights-n}
-{bias-n  // updated
-bias-n}
-update-n}
-{accuracy
-accuracy}
-{loss
-loss}
-{confusion-matrix
-confusion-matrix}
-{predictions
-predictions}
-epoch-n}
+epoch-n:
+    n-updates
+    update-n:
+        weights-gradient-n  // gradient that will be applied (given by optimizer)
+        bias-gradient-n
+        weights-n  // updated
+        bias-n
+    accuracy
+    loss
+    confusion-matrix
+    predictions

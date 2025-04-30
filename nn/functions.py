@@ -4,16 +4,16 @@ import numpy as np
 def relu(x):
     return x if x > 0 else 0
 
-def leaky_relu(leak = 0.1):
+def leaky_relu(leak = 0.1, alpha = 1):
     @np.vectorize
     def func(x):
-        return x if x > 0 else x*leak  # leak is accessed through a 'closure'
+        return alpha * x if x > 0 else x*leak  # leak is accessed through a 'closure'
     return func
 
-def der_leaky_relu(leak = 0.1):
+def der_leaky_relu(leak = 0.1, alpha = 1):
     @np.vectorize
     def func(x):
-        return 1 if x > 0 else leak
+        return alpha if x > 0 else leak
     return func
 
 @np.vectorize
