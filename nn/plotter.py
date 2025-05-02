@@ -69,10 +69,9 @@ class Plotter:
             weights_gradients[weight] = np.asarray(weights_gradients[weight])  # convert entire history of gradients into one numpy array
             if n_points is not None:
                 weights_gradients[weight] = weights_gradients[weight][:n_points]
-            print(f'gradients, shape of each history element = {weights_gradients[weight][0].shape}')
             for r in range(weights_gradients[weight][0].shape[0]):
                 for c in range(weights_gradients[weight][0].shape[1]):
-                    axs[0, ax].plot(weights_gradients[weight][:, r, c], label = f'[{r}, {c}]', linewidth = 0.7)
+                    axs[0, ax].plot(weights_gradients[weight][:, r, c], label = f'{r*2 + c}', linewidth = 0.7)
                     axs[0, ax].legend(title = 'elements')
                     axs[0, ax].set_title(f"weights-{self.data['n_weights'][ax]}")
                     axs[0, ax].set_xlabel("Updates")
@@ -84,7 +83,7 @@ class Plotter:
             if n_points is not None:
                 bias_gradients[bias] = bias_gradients[bias][:n_points]
             for r in range(bias_gradients[bias][0].shape[0]):
-                    axs[1, ax].plot(bias_gradients[bias][:, r, 0], label = f'[{r}]', linewidth = 0.7)
+                    axs[1, ax].plot(bias_gradients[bias][:, r, 0], label = f'{r}', linewidth = 0.7)
                     axs[1, ax].legend(title = 'elements')
                     axs[1, ax].set_title(f"bias-{self.data['n_weights'][ax] + 1}")
                     axs[1, ax].set_xlabel("Updates")
@@ -148,10 +147,9 @@ class Plotter:
             weights[weight] = np.asarray(weights[weight])
             if n_points is not None:
                 weights[weight] = weights[weight][:n_points]
-            print(f'gradients, shape of each history element = {weights[weight][0].shape}')
             for r in range(weights[weight][0].shape[0]):
                 for c in range(weights[weight][0].shape[1]):
-                    axs[0, ax].plot(weights[weight][:, r, c], label = f'[{r}, {c}]', linewidth = 0.7)
+                    axs[0, ax].plot(weights[weight][:, r, c], label = f'{r*2 + c}', linewidth = 0.7)
                     axs[0, ax].legend(title = 'elements')
                     axs[0, ax].set_title(f"weights-{self.data['n_weights'][ax]}")
                     axs[0, ax].set_xlabel("Updates")
@@ -163,7 +161,7 @@ class Plotter:
             if n_points is not None:
                 bias[bias_name] = bias[bias_name][:n_points]
             for r in range(bias[bias_name][0].shape[0]):
-                    axs[1, ax].plot(bias[bias_name][:, r, 0], label = f'[{r}]', linewidth = 0.7)
+                    axs[1, ax].plot(bias[bias_name][:, r, 0], label = f'{r}', linewidth = 0.7)
                     axs[1, ax].legend(title = 'elements')
                     axs[1, ax].set_title(f"bias-{self.data['n_weights'][ax] + 1}")
                     axs[1, ax].set_xlabel("Updates")
@@ -286,12 +284,16 @@ class Plotter:
         time_str = time.strftime("%I-%M-%S_%p", time.localtime(time.time()))
         name = "/regression_" + (time_str if name is None else name) + ".png"
 
+        features = features.reshape((features.shape[0], 1))
+        targets = targets.reshape((targets.shape[0], 1))
+        prediction_size = 15
+
         if predictions is not None:
             fig, ax = plt.subplots(figsize = (6, 4))
             fig.suptitle("Predictions", size = "xx-large")
 
-            ax.scatter(features[:, 0], targets[:, 0], label = "targets")
-            ax.scatter(features[:, 0], predictions, label = "predictions", c = "red", s = 3)
+            ax.scatter(features[:, 0], targets[:, 0], label = "targets", c = "cornflowerblue")
+            ax.scatter(features[:, 0], predictions, label = "predictions", marker = "x", c = "coral", s = prediction_size)
             ax.legend()
 
             fig.savefig(dir + name, bbox_inches = "tight")
@@ -308,8 +310,10 @@ class Plotter:
             axis = axs[i//2][i%2]
             epoch = f'epoch-{epochs[i]}'
             predictions = np.asarray(self.data[epoch]['predictions'])
-            axis.scatter(features[:, 0], targets[:, 0], label = "targets")
-            axis.scatter(features[:, 0], predictions, label = "predictions", c = "red", s = 3)
+            features = features[:predictions.shape[0], :]
+            targets = targets[:predictions.shape[0], :]
+            axis.scatter(features[:, 0], targets[:, 0], label = "targets", c = "cornflowerblue")
+            axis.scatter(features[:, 0], predictions, label = "predictions", marker = "x", c = "coral", s = prediction_size)
             axis.set_title(f'Epoch-{epochs[i]}')
             axis.legend()
         
