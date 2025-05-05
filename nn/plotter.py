@@ -277,7 +277,7 @@ class Plotter:
         print(f'plot saved at {dir + name}')
         plt.show()
     
-    def plot_regression(self, features, targets, dir, name = None, predictions = None):
+    def plot_regression(self, features, targets, dir, name = None, predictions = None, x_label = None):
         if not os.access(dir, os.F_OK):
             print(f'cannot access {dir}')
             return
@@ -294,6 +294,7 @@ class Plotter:
 
             ax.scatter(features[:, 0], targets[:, 0], label = "targets", c = "cornflowerblue")
             ax.scatter(features[:, 0], predictions, label = "predictions", marker = "x", c = "coral", s = prediction_size)
+            ax.set_xlabel(x_label)
             ax.legend()
 
             fig.savefig(dir + name, bbox_inches = "tight")
@@ -315,6 +316,7 @@ class Plotter:
             axis.scatter(features[:, 0], targets[:, 0], label = "targets", c = "cornflowerblue")
             axis.scatter(features[:, 0], predictions, label = "predictions", marker = "x", c = "coral", s = prediction_size)
             axis.set_title(f'Epoch-{epochs[i]}')
+            axis.set_xlabel(x_label)
             axis.legend()
         
         fig.savefig(dir + name, bbox_inches = "tight")
@@ -339,6 +341,9 @@ class Plotter:
         y = np.linspace(-1, 1, 20)
         z = np.zeros((y.size, x.size))  # as per matplotlib's contour plot signature
 
+        features = features[:200, :]
+        targets = targets[:200, :]
+
         for ax in range(4):
             vector1 = default_rng(seeds[ax][0]).uniform(-1, 1, size = original_vector.shape)
             vector1 = (vector1 / np.linalg.norm(vector1)) * np.linalg.norm(original_vector)
@@ -352,8 +357,11 @@ class Plotter:
                     z[i, j] = loss
             
             axis = axs[ax//2][ax%2]
-            contour_set = axis.contour(x, y, z, levels = 15, cmap = "magma")
+            # levels = 15 (earlier) --> np.linspace(np.min(z), np.max(z)//2, 10)
+            contour_set = axis.contour(x, y, z, levels = np.linspace(np.min(z), np.max(z)//4, 10), cmap = "magma")
             axis.clabel(contour_set)
+            axis.set_xlabel("alpha")
+            axis.set_ylabel("beta")
             axis.scatter(0, 0, c = "blue")
         
         model.set_weights(original_vector)
