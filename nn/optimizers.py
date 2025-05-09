@@ -16,12 +16,12 @@ class SGD():
     
     def error_output_layer(self, layer_index, label):
         first_term = self.model.der_loss_function(label, self.model.layers[layer_index].a_[0][0])
-        return first_term * self.model.layers[layer_index].der_activation(self.model.layers[layer_index].z_)
+        return first_term * self.model.layers[layer_index].der_activate()
 
     def error_layer(self, this_index, weight_index):  # weights connecting this layer to next layer
         return np.matmul(
             np.transpose(self.model.weights[weight_index].matrix),
-            self.model.layers[this_index+1].del_) * self.model.layers[this_index].der_activation(self.model.layers[this_index].z_)
+            self.model.layers[this_index+1].del_) * self.model.layers[this_index].der_activate()
         
     def on_pass(self):
         # reset gradients

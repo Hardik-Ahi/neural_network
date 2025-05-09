@@ -44,7 +44,7 @@ class Trainer:
         self.model.layers[0].a_ = input_data.reshape((input_data.shape[-1], 1))
         for i in range(1, len(self.model.layers)):
             self.model.layers[i].z_ = np.matmul(self.model.weights[i-1].matrix, self.model.layers[i-1].a_) + self.model.layers[i].b_
-            self.model.layers[i].a_ = self.model.layers[i].activation(self.model.layers[i].z_)
+            self.model.layers[i].activate()
         
     def save_history(self, dir, name = None):
         self.logger.write_log(dir, name)

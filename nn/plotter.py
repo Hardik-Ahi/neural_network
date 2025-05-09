@@ -323,7 +323,7 @@ class Plotter:
         print(f'plot saved at {dir + name}')
         plt.show()
 
-    def plot_contours(self, trainer, features, targets, dir, name = None, seed = 91):
+    def plot_contours(self, trainer, features, targets, dir, name = None, magnitude = 1, seed = 91):
         if not os.access(dir, os.F_OK):
             print(f'cannot access {dir}')
             return
@@ -337,8 +337,8 @@ class Plotter:
         fig, axs = plt.subplots(2, 2, figsize = (12, 8), gridspec_kw = {'wspace': 0.2, 'hspace': 0.3})
         fig.suptitle("Loss Landscape", size = "xx-large")
 
-        x = np.linspace(-1, 1, 20)
-        y = np.linspace(-1, 1, 20)
+        x = np.linspace(-magnitude, magnitude, 20)
+        y = np.linspace(-magnitude, magnitude, 20)
         z = np.zeros((y.size, x.size))  # as per matplotlib's contour plot signature
 
         features = features[:200, :]
@@ -357,12 +357,13 @@ class Plotter:
                     z[i, j] = loss
             
             axis = axs[ax//2][ax%2]
-            # levels = 15 (earlier) --> np.linspace(np.min(z), np.max(z)//2, 10)
-            contour_set = axis.contour(x, y, z, levels = np.linspace(np.min(z), np.max(z)//4, 10), cmap = "magma")
+            # levels = 15 (earlier) --> np.linspace(np.min(z), np.max(z)//4, 10)
+            contour_set = axis.contour(x, y, z, levels = 15, cmap = "magma")
             axis.clabel(contour_set)
             axis.set_xlabel("alpha")
             axis.set_ylabel("beta")
             axis.scatter(0, 0, c = "blue")
+            print(f'Grid-{ax} done')
         
         model.set_weights(original_vector)
         fig.savefig(dir + name, bbox_inches = "tight")

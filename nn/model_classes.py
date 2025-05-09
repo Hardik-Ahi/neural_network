@@ -17,6 +17,49 @@ class Layer:
     
     def init_biases(self):
         self.b_ = np.zeros((self.n_neurons, 1))
+    
+    def activate(self):
+        self.a_ = self.activation(self.z_)
+    
+    def der_activate(self):
+        return self.der_activation(self.z_)
+
+class PolyLayer:
+
+    def __init__(self, *layers):
+        self.layers = layers  # list as it is
+        self.n_neurons = sum(list(map(lambda layer: layer.n_neurons, self.layers)))
+        self.z_ = np.zeros((self.n_neurons, 1))
+        self.del_ = np.zeros((self.n_neurons, 1))
+        self.b_gradients = np.zeros((self.n_neurons, 1))
+        self.a_ = np.zeros((self.n_neurons, 1))
+        self.b_ = np.zeros((self.n_neurons, 1))
+    
+    def init_biases(self):
+        start = 0
+        for i in range(len(self.layers)):
+            self.layers[i].init_biases()
+            self.b_[start : start+self.layers[i].n_neurons] = self.layers[i].b_
+            start += self.layers[i].n_neurons
+    
+    def activate(self):
+        # prerequisite: layer.z_
+        start = 0
+        for i in range(len(self.layers)):
+            self.layers[i].z_ = self.z_[start : start+self.layers[i].n_neurons]
+            start += self.layers[i].n_neurons
+
+        start = 0
+        for i in range(len(self.layers)):
+            self.layers[i].activate()
+            self.a_[start : start+self.layers[i].n_neurons] = self.layers[i].a_
+            start += self.layers[i].n_neurons
+
+    def der_activate(self):
+        result = []
+        for i in range(len(self.layers)):
+            result.append(self.layers[i].der_activate())
+        return np.asarray(result).reshape((self.n_neurons, 1))
 
 class Weights:
 
