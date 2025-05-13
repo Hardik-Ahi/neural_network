@@ -37,16 +37,18 @@ def get_minibatch(features, targets, batch_size = 1, start_at = 0):
 def make_standard(x, mean, std):
     return (x - mean) / std
 
-def standardize_data(features, exclude_indices = [], from_means = None, from_stds = None):  # in-place operation
+def standardize_data(features, include_indices = [], exclude_indices = [], from_means = None, from_stds = None):  # in-place operation
     means = list()
     stds = list()
+    from_counter = 0
     for i in range(features.shape[1]):
-        if i not in exclude_indices:
-            mean = np.mean(features[:, i]) if from_means is None else from_means[i]
-            std = np.std(features[:, i]) if from_stds is None else from_stds[i]
+        if (i in include_indices and i not in exclude_indices) or (len(include_indices) == 0 and len(exclude_indices) == 0):
+            mean = np.mean(features[:, i]) if from_means is None else from_means[from_counter]
+            std = np.std(features[:, i]) if from_stds is None else from_stds[from_counter]
             features[:, i] = (features[:, i] - mean) / std
             means.append(mean)
             stds.append(std)
+            from_counter += 1
     return means, stds
     
 

@@ -64,7 +64,24 @@ class Momentum(SGD):
         self.biases[layer_index] = self.beta * self.biases[layer_index] - (l_rate * self.gradient_biases(layer_index))  # update momentum term
         self.model.layers[layer_index].b_ += self.biases[layer_index]
         return -self.biases[layer_index]
-    
+
+class RMSProp(Momentum):
+    def __init__(self, beta = 0.9):
+        self.beta = beta
+        self.epsilon = 1e-7
+
+    # use super's set_model()
+
+    def update_weights(self, weight_index, l_rate):
+        self.weights[weight_index] = self.beta * self.weights[weight_index] + (1 - self.beta) * np.square(self.gradient_weights(weight_index))
+        self.model.weights[weight_index].matrix -= (l_rate * self.gradient_weights(weight_index) / np.sqrt(self.weights[weight_index] + self.epsilon))
+        return np.sqrt(self.weights[weight_index] + self.epsilon)
+
+    def update_biases(self, layer_index, l_rate):
+        self.biases[layer_index] = self.beta * self.biases[layer_index] + (1 - self.beta) * np.square(self.gradient_biases(layer_index))
+        self.model.layers[layer_index].b_ -= (l_rate * self.gradient_biases(layer_index) / np.sqrt(self.biases[layer_index] + self.epsilon))
+        return np.sqrt(self.biases[layer_index] + self.epsilon)
+
 # make every layer update its biases using layer.b_gradients rather than layer.del_
 # layer.del_ is the error due to the present training sample; it needs to remain unmodified by optimizers to pass back to
 # the weights and biases so that THEY can calculate their gradients (modified or not) correctly.
