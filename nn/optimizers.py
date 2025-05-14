@@ -14,9 +14,8 @@ class SGD():
     def current_gradient(self, weight_index):
         return np.matmul(self.model.weights[weight_index].layer_2.del_, np.transpose(self.model.weights[weight_index].layer_1.a_))
     
-    def error_output_layer(self, layer_index, label):
-        first_term = self.model.der_loss_function(label, self.model.layers[layer_index].a_[0][0])
-        return first_term * self.model.layers[layer_index].der_activate()
+    def error_output_layer(self, label):
+        return self.model.loss.error_output_layer(self.model.layers[-1], label)
 
     def error_layer(self, this_index, weight_index):  # weights connecting this layer to next layer
         return np.matmul(

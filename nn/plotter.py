@@ -261,13 +261,13 @@ class Plotter:
         fig.suptitle("Predictions", size = "xx-large")
 
         epochs = np.linspace(0, self.data['n-epochs']-1, 4, dtype = int)
-
         for i in range(epochs.shape[0]):
             axis = axs[i//2][i%2]
             epoch = f'epoch-{epochs[i]}'
             predictions = np.asarray(self.data[epoch]['predictions'], dtype = int)
             zeros = (predictions == 0)  # use this boolean array to index features
             ones = (predictions == 1)
+            features = features[:predictions.shape[0]]
             axis.scatter(features[zeros, 0], features[zeros, 1], c = "red", label = "0")
             axis.scatter(features[ones, 0], features[ones, 1], c = "blue", label = "1")
             axis.set_title(f'Epoch-{epochs[i]}')
@@ -362,7 +362,8 @@ class Plotter:
             axis.clabel(contour_set)
             axis.set_xlabel("alpha")
             axis.set_ylabel("beta")
-            axis.scatter(0, 0, c = "blue")
+            axis.scatter(0, 0, c = "blue", label = "model")
+            axis.legend()
             print(f'Grid-{ax} done')
         
         model.set_weights(original_vector)

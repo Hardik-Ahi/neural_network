@@ -12,10 +12,10 @@ class Trainer:
         self.optimizer.set_model(self.model)
         self.logger = Logger()
     
-    def error_output_layer(self, layer_index, label):
-        value = self.optimizer.error_output_layer(layer_index, label)
-        self.model.layers[layer_index].b_gradients += value / self.batch_size
-        self.model.layers[layer_index].del_ = value
+    def error_output_layer(self, label):
+        value = self.optimizer.error_output_layer(label)
+        self.model.layers[-1].b_gradients += value / self.batch_size
+        self.model.layers[-1].del_ = value
 
     def error_layer(self, this_index, weight_index):
         value = self.optimizer.error_layer(this_index, weight_index)
@@ -23,7 +23,7 @@ class Trainer:
         self.model.layers[this_index].del_ = value
 
     def backward_pass(self, label):  # single instance
-        self.error_output_layer(-1, label)
+        self.error_output_layer(label)
         for i in range(len(self.model.layers)-2, 0, -1):  # except the input layer
             self.error_layer(i, i)
         
@@ -130,7 +130,7 @@ class Trainer:
             predictions.append(self.model.layers[-1].a_[0][0])
         
         predictions = np.asarray(predictions)
-        loss = self.model.loss_function(targets, predictions.reshape((predictions.size,)))
+        loss = self.model.loss.calculate_loss(targets, predictions.reshape((predictions.size,)))
         predictions = round_off(predictions)
         score = self.accuracy(targets, predictions)
         matrix = self.confusion_matrix(targets, round_off(predictions))
@@ -163,7 +163,7 @@ class RegressionTrainer(Trainer):
             predictions.append(self.model.layers[-1].a_[0][0])
 
         predictions = np.asarray(predictions)
-        loss = self.model.loss_function(targets, predictions)
+        loss = self.model.loss.calculate_loss(targets, predictions)
 
         # R^2 score
         residuals = np.sum((targets - predictions)**2)

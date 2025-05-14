@@ -82,11 +82,10 @@ class Weights:
 
 class Model:
 
-    def __init__(self, loss_function, der_loss_function, seed = 1000):
+    def __init__(self, loss, seed = 1000):
         self.layers = list()
         self.weights = list()
-        self.loss_function = loss_function  # should be applicable to single instances and batches
-        self.der_loss_function = der_loss_function
+        self.loss = loss  # 'class' for the loss function
         self.seed = seed
     
     def add_layer(self, layer):
