@@ -277,6 +277,46 @@ class Plotter:
         print(f'plot saved at {dir + name}')
         plt.show()
     
+    def plot_classification(self, x_axis, y_axis, targets, dir, name = None):
+        if not os.access(dir, os.F_OK):
+            print(f'cannot access {dir}')
+            return
+        time_str = time.strftime("%I-%M-%S_%p", time.localtime(time.time()))
+        name = "/classification_" + (time_str if name is None else name) + ".png"
+
+        fig, axs = plt.subplots(2, 2, figsize = (12, 8), gridspec_kw = {'wspace': 0.2, 'hspace': 0.3})
+        fig.suptitle("Classification: First 200 samples", size = "x-large")
+
+
+        epochs = np.linspace(0, self.data['n-epochs']-1, 4, dtype = int)
+        for i in range(epochs.shape[0]):
+            axis = axs[i//2][i%2]
+            epoch = f'epoch-{epochs[i]}'
+
+            predictions = np.asarray(self.data[epoch]['predictions'], dtype = int)
+            shorter = min(predictions.shape[0], x_axis.shape[0])
+            predictions = predictions[:shorter]
+            x_axis = x_axis[:shorter]
+            y_axis = y_axis[:shorter]
+            targets = targets[:shorter]
+            targets = targets.reshape(predictions.shape)
+
+            zeros = (predictions == 0)  # use this boolean array to index features
+            ones = (predictions == 1)
+            incorrect = ((targets == 1) & zeros) | ((targets == 0) & ones)
+
+            axis.scatter(x_axis[zeros], y_axis[zeros], c = "red", label = "0")
+            axis.scatter(x_axis[ones], y_axis[ones], c = "blue", label = "1")
+            axis.scatter(x_axis[incorrect], y_axis[incorrect], c = "black", label = "incorrect", marker = "x")
+            axis.set_xlabel("PCA Component-1")
+            axis.set_ylabel("PCA Component-2")
+            axis.set_title(f'Epoch-{epochs[i]}')
+            axis.legend()
+
+        fig.savefig(dir + name, bbox_inches = "tight")
+        print(f'plot saved at {dir + name}')
+        plt.show()
+
     def plot_regression(self, features, targets, dir, name = None, predictions = None, x_label = None):
         if not os.access(dir, os.F_OK):
             print(f'cannot access {dir}')
