@@ -81,9 +81,7 @@ class RMSProp(Momentum):
         self.model.layers[layer_index].b_ -= (l_rate * self.gradient_biases(layer_index) / np.sqrt(self.biases[layer_index] + self.epsilon))
         return np.sqrt(self.biases[layer_index] + self.epsilon)
 
-# make every layer update its biases using layer.b_gradients rather than layer.del_
-# layer.del_ is the error due to the present training sample; it needs to remain unmodified by optimizers to pass back to
-# the weights and biases so that THEY can calculate their gradients (modified or not) correctly.
+# not working as of now
 class Adam(SGD):
 
     def __init__(self, beta1 = 0.9, beta2 = 0.999, epsilon = 1e-7):
