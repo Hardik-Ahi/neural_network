@@ -18,4 +18,6 @@ In no specific order:
     5. Change in the predictions of the model through the epochs.
 4. Use object-oriented programming (where possible) for separation of concerns and simplified interactions between components.
 5. Use jupyter notebooks as the 'client' to access the API offered by this system (package), and demonstrate its working.
-6. Achieved ~95% accuracy on an 'AND gate dataset' which was generated programmatically, and ~85% accuracy on two datasets from Kaggle. Shows that the learning process actually happened, and thus the from-scratch implementation was a success.
+6. Achieved ~95% accuracy on an 'AND gate dataset' which was generated programmatically, and ~85% accuracy on two datasets from Kaggle*. Shows that the learning process actually happened, and thus the from-scratch implementation was a success.
+
+*Curated by my team members
