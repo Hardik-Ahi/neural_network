@@ -188,7 +188,7 @@ class Plotter:
         if confusion_matrix:
             confusion_matrix = {'tp': list(), 'tn': list(), 'fp': list(), 'fn': list()}
             for i in range(self.data['n-epochs']):
-                matrix = self.data[epoch]['confusion-matrix']
+                matrix = self.data[f'epoch-{i}']['confusion-matrix']
                 for key in matrix.keys():
                     confusion_matrix[key].append(matrix[key])
 
