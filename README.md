@@ -20,4 +20,9 @@ In no specific order:
 5. Use jupyter notebooks as the 'client' to access the API offered by this system (package), and demonstrate its working.
 6. Achieved ~95% accuracy on an 'AND gate dataset' which was generated programmatically, and ~85% accuracy on two datasets from Kaggle*. Shows that the learning process actually happened, and thus the from-scratch implementation was a success.
 
+## NOTE
+Look in the folder 'sample_plots' for some of the plots generated using the Matplotlib functions defined in plotter.py.<br>
+The model needs to undergo training on a dataset in order to then generate these plots.
+
+
 *Curated by my team members
