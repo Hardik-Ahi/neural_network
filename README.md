@@ -33,8 +33,8 @@ Implementing the entire training pipeline from scratch helped me develop:
 
 * stronger mathematical intuition,
 * better debugging skills,
-* deeper software engineering experience,
-* and a clearer understanding of neural network systems design.
+* deeper software engineering experience, and
+* a clearer understanding of neural network systems design.
 
 ## Quickstart for Windows
 
@@ -61,8 +61,8 @@ D_train, D_test = split_data(dataset, 0.3, 10)
 
 X_train = D_train.drop(columns = ['target'])
 y_train = D_train['target']
-X_test = D_test.drop(columns = ['charges'])
-y_test = D_test['charges']
+X_test = D_test.drop(columns = ['target'])
+y_test = D_test['target']
 
 model = Model(MSE(), 5)
 model.add_layer(Layer(8))
