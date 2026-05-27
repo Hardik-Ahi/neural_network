@@ -1,6 +1,15 @@
 # Neural Network Library from Scratch
 A modular neural network framework with a TensorFlow-like API and custom visualization tooling, built from the ground up using NumPy and Matplotlib.
 
+## Quickstart for Windows
+
+1. Install Python 3.9
+2. `git clone <repository_url> project_folder`
+3. `cd project_folder`
+4. `python -m venv my_venv`
+5. `my_venv\Scripts\activate`
+6. `pip install -r requirements.txt`
+
 ## Overview
 This project is a fully functional neural network library implemented entirely from scratch using Python, NumPy, and object-oriented design principles.
 
@@ -35,15 +44,6 @@ Implementing the entire training pipeline from scratch helped me develop:
 * better debugging skills,
 * deeper software engineering experience, and
 * a clearer understanding of neural network systems design.
-
-## Quickstart for Windows
-
-1. Install Python 3.9
-2. `git clone <repository_url> project_folder`
-3. `cd project_folder`
-4. `python -m venv my_venv`
-5. `my_venv\Scripts\activate`
-6. `pip install -r requirements.txt`
 
 ## Example Usage
 
