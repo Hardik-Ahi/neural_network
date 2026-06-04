@@ -1,6 +1,7 @@
 # Neural Network Library from Scratch
 A modular neural network framework with a TensorFlow-like API and custom visualization tooling, built from the ground up using NumPy and Matplotlib.
 
+[Watch Demo on YouTube](https://youtu.be/qJAhmKIAFPU)
 ## Quickstart for Windows
 
 1. Install Python 3.9
