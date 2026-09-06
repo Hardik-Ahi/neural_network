@@ -1,13 +1,20 @@
 import numpy as np
 
 @np.vectorize
-def relu(x):
+def relu2(x):
     return x if x > 0 else 0
+
+def relu():
+    @np.vectorize
+    def func(x):
+        return x if x > 0 else 0
+    return func
 
 def leaky_relu(leak = 0.1, alpha = 1):
     @np.vectorize
     def func(x):
         return alpha * x if x > 0 else x*leak  # leak is accessed through a 'closure'
+    func.__name__ = "leaky_relu" 
     return func
 
 def der_leaky_relu(leak = 0.1, alpha = 1):
@@ -17,8 +24,14 @@ def der_leaky_relu(leak = 0.1, alpha = 1):
     return func
 
 @np.vectorize
-def sigmoid(x):
+def sigmoid2(x):
     return 1 / (1 + np.exp(-x))
+
+def sigmoid():
+    @np.vectorize
+    def func(x):
+        return 1 / (1 + np.exp(-x))
+    return func
 
 @np.vectorize
 def round_off(x):
