@@ -26,9 +26,7 @@ def load_test():
 # DATASET
 from nn.dataset_utils import and_gate_dataset
 
-st.header("AND gate dataset")  # convert to dropdown
-# map load_train(), load_test() to different datasets - Kaggle, AND gate.
-# like a dropdown to select which dataset to load.
+st.header("AND gate dataset")
 
 st.subheader("Training set")
 train_data = load_train()
@@ -40,30 +38,57 @@ st.dataframe(test_data)
 
 # MODEL
 from nn.model_classes import Model, Layer
-from nn.functions import BinaryLoss, leaky_relu, der_leaky_relu, sigmoid, der_sigmoid
+from nn.functions import BinaryLoss, leaky_relu, der_leaky_relu, sigmoid, der_sigmoid, relu, der_relu
+
+activation_functions = {
+    "None": [None, None],
+    "ReLU": [relu, der_relu],
+    "Leaky ReLU": [leaky_relu(), der_leaky_relu()],
+    "Sigmoid": [sigmoid, der_sigmoid]
+}
 
 st.header("Model")
+st.subheader("Add Layers")
+col1, col2, col3, col4 = st.columns(4)
 
 if "model" not in st.session_state:
-    # Replace this dict with your actual Model or Layer object instance
-    model = Model(BinaryLoss(), 1)
-    model.add_layer(Layer(2))
-    model.add_layer(Layer(2, leaky_relu(), der_leaky_relu()))
-    model.add_layer(Layer(1, sigmoid(), der_sigmoid))
-    model.compile()
-    st.session_state.model = model
+    st.session_state.model = Model(BinaryLoss(), 1)
+    st.session_state.model_name = "AND Gate Model"
+  
+if "activations" not in st.session_state:
+    st.session_state.activations = list()
 
 model = st.session_state.model
+activations = st.session_state.activations
+
+with col1:
+  layer_number = st.number_input(f"Layer number", disabled=True, value=len(model.layers) + 1)
+
+with col2:
+  n_neurons = st.number_input("Number of Neurons", min_value=1, max_value=10, value=2, step=1)
+
+with col3:
+  activation_function = st.selectbox("Activation Function", list(activation_functions.keys()))
+
+with col4:
+  if st.button("Add Layer"):
+    model.add_layer(Layer(n_neurons, activation_functions[activation_function][0], activation_functions[activation_function][1]))
+    activations.append(activation_function)
+    st.success(f"Layer {layer_number} added!")
+
+if st.button("Compile Model"):
+  model.compile()
+  st.success("Model compiled!")
 
 # Display model layers as table
+st.subheader("Model Summary")
+
 layers = pd.DataFrame(columns=["Layer", "Number of Neurons", "Activation Function"])
 for i, layer in enumerate(model.layers):
-  layers.loc[i] = [i+1, layer.n_neurons, layer.activation.__name__ if layer.activation else "None"]
+  layers.loc[i] = [i+1, layer.n_neurons, activations[i]]
 
 st.dataframe(layers, hide_index=True)
 
-# show weights and biases of model via checkbox
-# move this to a sidebar to check in before and after training.
 show_weights_biases = st.checkbox("Show Weights and Biases")
 
 if show_weights_biases:
@@ -114,30 +139,63 @@ from nn.plotter import Plotter
 
 st.header("Training History")
 
-plotter = Plotter()
+if 'plotter' not in st.session_state:
+  st.session_state.plotter = Plotter()
+
+plotter = st.session_state.plotter
+
+@st.cache_data
+def load_history(name = 'batch_size_1.txt'):
+  plotter.read_file(f'./logs/{name}')
+  return f'./logs/{name}'
+
+@st.cache_data
+def plot_gradients(name = 'batch_size_1', points = 700):
+  plotter.plot_gradients('./plots', name, points)
+  return f'./plots/gradients_{name}.png'
+
+@st.cache_data
+def plot_weights(name = 'batch_size_1', points = 700):
+  plotter.plot_weights('./plots', name, points)
+  return f'./plots/weights_{name}.png'
+
+@st.cache_data
+def plot_score(name = 'batch_size_1', points = 700):
+  plotter.plot_score('./plots', name, points)
+  return f'./plots/score_{name}.png'
+
+@st.cache_data
+def plot_predictions(X_train, _dir = './plots', name = 'batch_size_1'):
+  plotter.plot_predictions(X_train, _dir, name)
+  return f'{_dir}/predictions_{name}.png'
+
+@st.cache_data
+def plot_loss_landscape(_trainer, X_train, y_train, _dir = './plots', name = 'batch_size_1'):
+  plotter.plot_contours(_trainer, X_train, y_train, _dir, name)
+  return f'{_dir}/contours_{name}.png'
 
 if st.button("Plot History"):
   with st.spinner("Reading log file..."):
-    plotter.read_file('./logs/batch_size_1.txt')
+    load_history()
 
   with st.spinner("Plotting gradients..."):
-    plotter.plot_gradients('./plots', 'batch_size_1', 700)
-    st.image('./plots/gradients_batch_size_1.png', caption='Gradients', use_container_width=True)
+    gradient_path = plot_gradients()
+    st.image(gradient_path, caption='Gradients', width='stretch')
 
   with st.spinner("Plotting weights..."):
-    plotter.plot_weights('./plots', 'batch_size_1', 700)
-    st.image('./plots/weights_batch_size_1.png', caption='Weights', use_container_width=True)
+    weight_path = plot_weights()
+    st.image(weight_path, caption='Weights', width='stretch')
 
   with st.spinner("Plotting accuracy..."):
-    plotter.plot_score('./plots', 'batch_size_1', 700)
-    st.image('./plots/score_batch_size_1.png', caption='Accuracy', use_container_width=True)
+    score_path = plot_score()
+    st.image(score_path, caption='Accuracy', width='stretch')
 
   with st.spinner("Plotting outputs..."):
-    plotter.plot_predictions(X_train, "./plots", "batch_size_1")
-    st.image('./plots/predictions_batch_size_1.png', caption='Predictions', use_container_width=True)
+    prediction_path = plot_predictions(X_train)
+    st.image(prediction_path, caption='Predictions', width='stretch')
 
-  with st.spinner("Plotting loss landscape..."):
-    plotter.plot_contours(trainer, X_train, y_train, "./plots", "batch_size_1")
-    st.image('./plots/contours_batch_size_1.png', caption='Loss Landscape', use_container_width=True)
+  with st.spinner("Plotting loss landscape (this takes a while)..."):
+    loss_landscape_path = plot_loss_landscape(trainer, X_train, y_train, "./plots", "batch_size_1")
+    st.image(loss_landscape_path, caption='Loss Landscape', width='stretch')
 
   st.success("Plots generated!")
