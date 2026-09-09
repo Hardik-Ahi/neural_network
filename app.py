@@ -115,33 +115,8 @@ if show_weights_biases:
   st.write(f"Layer {len(weights)+1} Biases:")
   biases[-1]
 
-# TRAIN
-from nn.trainer import Trainer
-from nn.optimizers import SGD
-
-st.header("Training")
-
-trainer = Trainer(model, SGD())
-X_train, y_train = train_data.iloc[:, :-1].values, train_data.iloc[:, -1].values
-y_train = y_train.reshape(y_train.shape[0], 1)  # reshape to column vector
-
-# input fields for training
-batch_size = st.number_input("Batch Size (1 - 32)", min_value=1, max_value=32, value=1, step=1)
-learning_rate = st.number_input("Learning Rate (0.001 - 1.0)", min_value=0.001, max_value=1.0, value=0.02, step=0.001, format="%.3f")
-epochs = st.number_input("Epochs (1 - 500)", min_value=1, max_value=500, value=120, step=1)
-
-if st.button("Train Model"):
-  with st.spinner("Training in progress..."):
-    trainer.train(X_train, y_train, batch_size, learning_rate, epochs = epochs)
-  st.success("Training completed!")
-
-  trainer.save_history('./logs', 'batch_size_1')
-  model.save_weights('./models', 'batch_size_1')
-
-# PLOT
+# PREP PLOTTING
 from nn.plotter import Plotter
-
-st.header("Training History")
 
 if 'plotter' not in st.session_state:
   st.session_state.plotter = Plotter()
@@ -177,6 +152,34 @@ def plot_predictions(X_train, _dir = './plots', name = 'batch_size_1'):
 def plot_loss_landscape(_trainer, X_train, y_train, _dir = './plots', name = 'batch_size_1'):
   plotter.plot_contours(_trainer, X_train, y_train, _dir, name)
   return f'{_dir}/contours_{name}.png'
+
+# TRAIN
+from nn.trainer import Trainer
+from nn.optimizers import SGD
+
+st.header("Training")
+
+trainer = Trainer(model, SGD())
+X_train, y_train = train_data.iloc[:, :-1].values, train_data.iloc[:, -1].values
+y_train = y_train.reshape(y_train.shape[0], 1)  # reshape to column vector
+
+# input fields for training
+batch_size = st.number_input("Batch Size (1 - 32)", min_value=1, max_value=32, value=1, step=1)
+learning_rate = st.number_input("Learning Rate (0.001 - 1.0)", min_value=0.001, max_value=1.0, value=0.02, step=0.001, format="%.3f")
+epochs = st.number_input("Epochs (1 - 500)", min_value=1, max_value=500, value=120, step=1)
+
+if st.button("Train Model"):
+  with st.spinner("Training in progress..."):
+    trainer.train(X_train, y_train, batch_size, learning_rate, epochs = epochs)
+  st.success("Training completed!")
+
+  trainer.save_history('./logs', 'batch_size_1')
+  model.save_weights('./models', 'batch_size_1')
+
+  st.cache_data.clear()  # clear all cache to ensure plots are generated with the latest training data
+
+# PLOT
+st.header("Training History")
 
 if st.button("Plot History"):
   with st.spinner("Reading log file..."):
