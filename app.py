@@ -53,16 +53,20 @@ col1, col2, col3, col4 = st.columns(4)
 
 if "model" not in st.session_state:
     st.session_state.model = Model(BinaryLoss(), 1)
+    st.session_state.model.add_layer(Layer(2, activation_functions["None"][0], activation_functions["None"][1]))
+    st.session_state.model.add_layer(Layer(1, activation_functions["Sigmoid"][0], activation_functions["Sigmoid"][1]))
     st.session_state.model_name = "AND Gate Model"
   
 if "activations" not in st.session_state:
     st.session_state.activations = list()
+    st.session_state.activations.append("None")
+    st.session_state.activations.append("Sigmoid")
 
 model = st.session_state.model
 activations = st.session_state.activations
 
 with col1:
-  layer_number = st.number_input(f"Layer number", disabled=True, value=len(model.layers) + 1)
+  layer_number = st.number_input(f"Layer number", disabled=True, value=len(model.layers))
 
 with col2:
   n_neurons = st.number_input("Number of Neurons", min_value=1, max_value=10, value=2, step=1)
@@ -71,9 +75,9 @@ with col3:
   activation_function = st.selectbox("Activation Function", list(activation_functions.keys()))
 
 with col4:
-  if st.button("Add Layer"):
-    model.add_layer(Layer(n_neurons, activation_functions[activation_function][0], activation_functions[activation_function][1]))
-    activations.append(activation_function)
+  if st.button("Add Layer", help="Add a new HIDDEN layer to the model (between input and output layers)"):
+    model.add_layer(Layer(n_neurons, activation_functions[activation_function][0], activation_functions[activation_function][1]), index=-1)
+    activations.insert(-1, activation_function)
     st.success(f"Layer {layer_number} added!")
 
 if st.button("Compile Model"):

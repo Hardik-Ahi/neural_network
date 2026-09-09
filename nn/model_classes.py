@@ -88,8 +88,11 @@ class Model:
         self.loss = loss  # 'class' for the loss function
         self.seed = seed
     
-    def add_layer(self, layer):
-        self.layers.append(layer)
+    def add_layer(self, layer, index = None):
+        if index == None:
+            self.layers.append(layer)
+        else:
+            self.layers.insert(index, layer)
     
     # part of model compiler
     def compile(self):
